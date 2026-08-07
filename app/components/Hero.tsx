@@ -10,87 +10,188 @@ export default function Hero({ onOpenBooking }: HeroProps) {
   return (
     <section
       id="hero"
-      className="relative min-h-[85vh] pt-24 pb-16 flex items-center justify-center overflow-hidden bg-[#FAFAFA]"
+      className="relative min-h-screen flex items-center overflow-hidden"
     >
-      {/* Background Hero Banner Image */}
+      {/* ── Full-bleed background image ── */}
       <div className="absolute inset-0 z-0">
         <Image
-          src="/images/bridal_makeup.png"
-          alt="Jugnu's Saloon Bridal & Beauty Transformation"
+          src="/images/hero_salon.png"
+          alt="Jugnu's Saloon luxury interior"
           fill
           priority
           className="object-cover object-center"
         />
-        {/* Dark Contrast Overlay for Text Readability */}
-        <div className="absolute inset-0 bg-gradient-to-r from-black/85 via-black/65 to-black/45" />
+        {/* Clean dual-tone overlay: strong left fade for text, gentle right */}
+        <div
+          className="absolute inset-0"
+          style={{
+            background:
+              "linear-gradient(105deg, rgba(10,10,10,0.82) 0%, rgba(10,10,10,0.60) 45%, rgba(10,10,10,0.28) 100%)",
+          }}
+        />
+        {/* Subtle gold warmth bloom — left side */}
+        <div
+          className="absolute inset-0 pointer-events-none"
+          style={{
+            background:
+              "radial-gradient(ellipse 60% 80% at 15% 60%, rgba(212,175,55,0.08) 0%, transparent 70%)",
+          }}
+        />
       </div>
 
-      {/* Subtle Gold Glare Background Effect */}
-      <div className="absolute top-1/3 left-1/4 w-[500px] h-[500px] bg-[#D4AF37]/20 rounded-full blur-[130px] pointer-events-none z-10" />
+      {/* ── Content ── */}
+      <div className="max-w-[1480px] mx-auto px-6 sm:px-10 lg:px-16 w-full relative z-10">
+        <div className="min-h-screen flex flex-col justify-center py-36 max-w-2xl">
 
-      <div className="max-w-[1480px] mx-auto px-4 sm:px-6 lg:px-8 relative z-20 w-full text-white">
-        <div className="max-w-3xl space-y-6">
-          {/* Main Headline */}
-          <h1 className="font-sans text-4xl sm:text-6xl xl:text-7xl font-extrabold tracking-tight leading-[1.08] text-white">
-            EXQUISITE BEAUTY, <br />
-            <span className="text-[#F5E8C7]">BRIDAL & HAIR ARTISTRY</span>
-          </h1>
-
-          {/* Subheading */}
-          <p className="text-slate-200 text-base sm:text-lg font-normal leading-relaxed max-w-xl">
-            From breathtaking <strong className="text-white font-semibold">HD Airbrush Bridal Makeovers</strong> to radiant 24K gold facials, hair styling, balayage, and nail extensions — experience total luxury care at <strong className="text-white font-semibold">Jugnu&apos;s Saloon</strong>.
-          </p>
-
-          {/* Pill Action Buttons */}
-          <div className="flex flex-wrap items-center gap-4 pt-2">
-            <a
-              href="tel:+11234567890"
-              className="px-8 py-3.5 rounded-full bg-[#F5E8C7] hover:bg-[#D4AF37] text-[#111111] font-bold text-xs uppercase tracking-widest transition-all shadow-md flex items-center space-x-2"
+          {/* Eyebrow */}
+          <div className="flex items-center space-x-3 mb-8">
+            <span
+              className="block w-10 h-px"
+              style={{ backgroundColor: "#D4AF37" }}
+            />
+            <span
+              className="text-[11px] font-semibold uppercase tracking-[0.26em]"
+              style={{ color: "#D4AF37" }}
             >
-              <svg
-                className="w-4 h-4 text-[#111111]"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"
-                />
-              </svg>
-              <span>Call Now</span>
-            </a>
-
-            <button
-              onClick={onOpenBooking}
-              className="px-8 py-3.5 rounded-full border-2 border-white/80 hover:border-[#D4AF37] bg-black/40 hover:bg-black/80 text-white font-bold text-xs uppercase tracking-widest transition-all backdrop-blur-sm cursor-pointer"
-            >
-              Book Online
-            </button>
+              Jugnu&apos;s Saloon
+            </span>
           </div>
 
-          {/* Social Proof */}
-          <div className="pt-6 flex items-center space-x-4">
-            <div className="flex items-center -space-x-2">
-              <div className="w-9 h-9 rounded-full border-2 border-white bg-slate-800 flex items-center justify-center text-[10px] font-bold">
-                JS
-              </div>
-              <div className="w-9 h-9 rounded-full border-2 border-white bg-[#D4AF37] text-black flex items-center justify-center text-[10px] font-bold">
-                ★5
-              </div>
-              <div className="w-9 h-9 rounded-full border-2 border-white bg-slate-900 text-white flex items-center justify-center text-[10px] font-bold">
-                +
-              </div>
-            </div>
+          {/* Headline */}
+          <h1
+            className="font-sans font-extrabold leading-[1.06] text-white mb-6"
+            style={{ fontSize: "clamp(2.8rem, 5.5vw, 5rem)" }}
+          >
+            Where Beauty
+            <br />
+            <span style={{ color: "#D4AF37" }}>Meets Artistry</span>
+          </h1>
 
-            <div className="text-xs text-slate-200">
-              <span className="font-bold text-white">30,000+</span> Satisfied Beauty & Bridal Clients
+          {/* Divider */}
+          <div
+            className="w-12 h-[2px] mb-7"
+            style={{ backgroundColor: "#D4AF37", opacity: 0.6 }}
+          />
+
+          {/* Body copy */}
+          <p
+            className="text-base sm:text-[17px] leading-relaxed font-normal mb-10 max-w-md"
+            style={{ color: "rgba(255,255,255,0.75)" }}
+          >
+            Premium bridal makeovers, hair artistry, 24K gold facials &amp;
+            more — all crafted for you with the finest touch of luxury.
+          </p>
+
+          {/* CTA row */}
+          <div className="flex flex-wrap items-center gap-5 mb-14">
+            {/* Primary: Book */}
+            <button
+              onClick={onOpenBooking}
+              className="cursor-pointer"
+              style={{
+                backgroundColor: "#D4AF37",
+                color: "#111111",
+                padding: "15px 36px",
+                borderRadius: "3px",
+                fontSize: "11px",
+                fontWeight: 700,
+                letterSpacing: "0.20em",
+                textTransform: "uppercase",
+                border: "2px solid #D4AF37",
+                transition: "all 0.25s ease",
+              }}
+              onMouseEnter={(e) => {
+                const el = e.currentTarget;
+                el.style.backgroundColor = "transparent";
+                el.style.color = "#D4AF37";
+              }}
+              onMouseLeave={(e) => {
+                const el = e.currentTarget;
+                el.style.backgroundColor = "#D4AF37";
+                el.style.color = "#111111";
+              }}
+            >
+              Book Now
+            </button>
+
+            {/* Secondary: Call */}
+            <a
+              href="tel:+11234567890"
+              className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.20em] transition-colors"
+              style={{ color: "rgba(255,255,255,0.80)", textDecoration: "none" }}
+              onMouseEnter={(e) => (e.currentTarget.style.color = "#D4AF37")}
+              onMouseLeave={(e) =>
+                (e.currentTarget.style.color = "rgba(255,255,255,0.80)")
+              }
+            >
+              <svg
+                width="15"
+                height="15"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth={2}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+              </svg>
+              Call Us
+            </a>
+          </div>
+
+          {/* Stats row */}
+          <div
+            className="flex items-center gap-8 pt-6"
+            style={{ borderTop: "1px solid rgba(255,255,255,0.14)" }}
+          >
+            <div>
+              <p className="text-2xl font-extrabold text-white">30K+</p>
+              <p
+                className="text-[11px] uppercase tracking-widest font-medium mt-0.5"
+                style={{ color: "rgba(255,255,255,0.50)" }}
+              >
+                Happy Clients
+              </p>
+            </div>
+            <div
+              className="w-px h-10"
+              style={{ backgroundColor: "rgba(255,255,255,0.15)" }}
+            />
+            <div>
+              <p className="text-2xl font-extrabold text-white">5.0 ★</p>
+              <p
+                className="text-[11px] uppercase tracking-widest font-medium mt-0.5"
+                style={{ color: "rgba(255,255,255,0.50)" }}
+              >
+                Rated Excellence
+              </p>
+            </div>
+            <div
+              className="w-px h-10"
+              style={{ backgroundColor: "rgba(255,255,255,0.15)" }}
+            />
+            <div>
+              <p className="text-2xl font-extrabold text-white">15+</p>
+              <p
+                className="text-[11px] uppercase tracking-widest font-medium mt-0.5"
+                style={{ color: "rgba(255,255,255,0.50)" }}
+              >
+                Years of Craft
+              </p>
             </div>
           </div>
         </div>
       </div>
+
+      {/* Bottom fade into page */}
+      <div
+        className="absolute bottom-0 left-0 right-0 h-32 pointer-events-none z-10"
+        style={{
+          background:
+            "linear-gradient(to top, #FAFAFA 0%, transparent 100%)",
+        }}
+      />
     </section>
   );
 }
