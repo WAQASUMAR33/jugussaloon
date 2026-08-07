@@ -4,7 +4,7 @@ import { useState } from "react";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import BookingModal from "../components/BookingModal";
-import ProductStore from "../components/ProductStore";
+import ServiceMatrix from "../components/ServiceMatrix";
 import Image from "next/image";
 
 export default function ContactPage() {
@@ -231,8 +231,8 @@ export default function ContactPage() {
         </div>
       </section>
 
-      {/* Salon Stores */}
-      <ProductStore />
+      {/* Salon Services & Pricing Matrix */}
+      <ServiceMatrix onOpenBooking={() => setBookingOpen(true)} />
 
       <Footer onOpenBooking={() => setBookingOpen(true)} />
 

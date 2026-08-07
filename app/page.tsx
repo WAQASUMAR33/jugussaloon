@@ -6,7 +6,6 @@ import Hero from "./components/Hero";
 import WhyChooseUs from "./components/WhyChooseUs";
 import AboutSection from "./components/AboutSection";
 import ServiceAndWorkflowSection from "./components/ServiceAndWorkflowSection";
-import ProductStore from "./components/ProductStore";
 import Stylists from "./components/Stylists";
 import NewsPress from "./components/NewsPress";
 import BookingModal from "./components/BookingModal";
@@ -43,9 +42,6 @@ export default function Home() {
 
       {/* Combined Services & How It Works Master Section (Inspiration Design) */}
       <ServiceAndWorkflowSection onOpenBooking={handleOpenBooking} />
-
-      {/* Beauty Products Store */}
-      <ProductStore />
 
       {/* Beauty & Makeup Artists Team */}
       <Stylists onOpenBooking={handleOpenBooking} />

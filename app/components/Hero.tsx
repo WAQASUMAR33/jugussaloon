@@ -43,19 +43,6 @@ export default function Hero({ onOpenBooking }: HeroProps) {
       <div className="max-w-[1480px] mx-auto px-6 sm:px-10 lg:px-16 w-full relative z-10">
         <div className="min-h-screen flex flex-col justify-center py-36 max-w-2xl">
 
-          {/* Eyebrow */}
-          <div className="flex items-center space-x-3 mb-8">
-            <span
-              className="block w-10 h-px"
-              style={{ backgroundColor: "#D4AF37" }}
-            />
-            <span
-              className="text-[11px] font-semibold uppercase tracking-[0.26em]"
-              style={{ color: "#D4AF37" }}
-            >
-              Jugnu&apos;s Saloon
-            </span>
-          </div>
 
           {/* Headline */}
           <h1
@@ -67,19 +54,13 @@ export default function Hero({ onOpenBooking }: HeroProps) {
             <span style={{ color: "#D4AF37" }}>Meets Artistry</span>
           </h1>
 
-          {/* Divider */}
-          <div
-            className="w-12 h-[2px] mb-7"
-            style={{ backgroundColor: "#D4AF37", opacity: 0.6 }}
-          />
 
           {/* Body copy */}
           <p
-            className="text-base sm:text-[17px] leading-relaxed font-normal mb-10 max-w-md"
+            className="text-base sm:text-[17px] leading-relaxed font-normal mb-10 max-w-md font-georgia"
             style={{ color: "rgba(255,255,255,0.75)" }}
           >
-            Premium bridal makeovers, hair artistry, 24K gold facials &amp;
-            more — all crafted for you with the finest touch of luxury.
+            Premium bridal makeovers, hair artistry, 24K gold facials &amp; more, all crafted for you with the finest touch of luxury.
           </p>
 
           {/* CTA row */}

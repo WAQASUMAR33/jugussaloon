@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import GoogleReviews from "./GoogleReviews";
 
 export default function NewsPress() {
   const articles = [
@@ -33,42 +34,21 @@ export default function NewsPress() {
     },
   ];
 
-  const testimonials = [
-    {
-      quote:
-        "Jugnu's Saloon is unmatched in quality. The HD airbrush bridal makeup Ayesha created for me turned heads everywhere!",
-      client: "Victoria Sterling",
-      stars: 5,
-    },
-    {
-      quote:
-        "The attention to detail, 24K gold facial, and warm hospitality make this the best beauty salon in the city.",
-      client: "Alexander Hayes",
-      stars: 5,
-    },
-    {
-      quote:
-        "The gold monogram logo matches their high skill. My keratin smoothing treatment and party glam were completely flawless.",
-      client: "Sophia Lauren",
-      stars: 5,
-    },
-  ];
-
   return (
     <section id="our-work" className="py-24 bg-[#FAFAFA] relative">
       <div className="max-w-[1480px] mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Section Header */}
+        {/* Section Header - STRICT RULE: NO PILL TAGS OVER HEADINGS */}
         <div className="text-center max-w-3xl mx-auto mb-16 space-y-2">
-          <h2 className="font-sans text-3xl sm:text-4xl font-extrabold text-[#111111] uppercase tracking-tight">
-            OUR WORK & REVIEWS
+          <h2 className="font-sans text-3xl sm:text-4xl lg:text-5xl font-extrabold text-[#111111] uppercase tracking-tight">
+            OUR WORK & PRESS
           </h2>
-          <p className="text-slate-600 text-sm font-normal">
-            Read recent press stories and real reviews from our valued salon clients.
+          <p className="text-slate-600 text-sm font-normal font-georgia">
+            Read recent press stories and features from our valued salon clients.
           </p>
         </div>
 
         {/* 3 Articles Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-20">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
           {articles.map((article, idx) => (
             <article
               key={idx}
@@ -83,16 +63,13 @@ export default function NewsPress() {
                     height={300}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 rounded-t-xl"
                   />
-                  <span className="absolute top-3 left-3 px-3 py-1 rounded-full text-[10px] uppercase font-bold tracking-wider bg-white/90 text-[#111111] shadow-sm">
-                    {article.badge}
-                  </span>
                 </div>
 
                 <div className="p-6 space-y-3">
                   <h3 className="font-sans text-base font-bold text-[#111111] group-hover:text-[#996515] transition-colors leading-snug">
                     {article.title}
                   </h3>
-                  <p className="text-slate-500 text-xs font-normal leading-relaxed">
+                  <p className="text-slate-500 text-xs font-normal leading-relaxed font-georgia">
                     {article.excerpt}
                   </p>
                 </div>
@@ -105,43 +82,11 @@ export default function NewsPress() {
             </article>
           ))}
         </div>
-
-        {/* Testimonials Panel */}
-        <div className="bg-white p-8 sm:p-12 rounded-3xl border border-slate-200 shadow-sm">
-          <div className="text-center max-w-xl mx-auto mb-10">
-            <h3 className="font-sans text-2xl font-bold text-[#111111] uppercase">
-              WHAT OUR CLIENTS SAY
-            </h3>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {testimonials.map((t, idx) => (
-              <div
-                key={idx}
-                className="p-6 rounded-2xl bg-[#F8F8F6] border border-slate-200 space-y-4 flex flex-col justify-between"
-              >
-                <div className="space-y-3">
-                  <div className="flex text-[#D4AF37] text-sm">
-                    {"★".repeat(t.stars)}
-                  </div>
-                  <p className="text-slate-700 text-xs italic leading-relaxed font-normal">
-                    &ldquo;{t.quote}&rdquo;
-                  </p>
-                </div>
-
-                <div className="pt-3 border-t border-slate-200">
-                  <p className="font-sans text-xs font-bold text-[#111111]">
-                    {t.client}
-                  </p>
-                  <p className="text-[10px] uppercase font-bold text-[#996515]">
-                    Verified Client
-                  </p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
       </div>
+
+      {/* Real Google Reviews Component */}
+      <GoogleReviews />
     </section>
   );
 }
+

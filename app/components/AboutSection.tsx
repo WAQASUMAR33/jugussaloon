@@ -50,11 +50,11 @@ export default function AboutSection({ onOpenBooking }: AboutSectionProps) {
               ELEVATE YOUR LOOK IN AN OASIS OF CALM & BEAUTY
             </h2>
 
-            <p className="text-slate-600 text-sm sm:text-base font-normal leading-relaxed">
+            <p className="text-slate-600 text-sm sm:text-base font-normal leading-relaxed font-georgia">
               <strong className="text-[#111111] font-semibold">Jugnu&apos;s Saloon</strong> is an award-winning hair & beauty salon. Our salon offers a sanctuary of calm and indulgent luxury with no limits to makeup, skin treatments, colouring, and hairdressing.
             </p>
 
-            <p className="text-slate-500 text-sm font-normal leading-relaxed">
+            <p className="text-slate-500 text-sm font-normal leading-relaxed font-georgia">
               Whether working based on your inspiration or from our master imagination, you will receive a signature salon experience designed to elevate your self-esteem and highlight your best features.
             </p>
 

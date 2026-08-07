@@ -1,134 +1,137 @@
 "use client";
 
+import Image from "next/image";
+
 interface WhyChooseUsProps {
   onOpenBooking: (serviceName?: string) => void;
 }
 
+const highlights = [
+  "Well-respected and trusted reputation in luxury beauty",
+  "Highly experienced team of certified master stylists",
+  "Outstanding artistry and exceptional service for every client",
+  "Private VIP suites & personalised bridal consultations",
+];
+
 export default function WhyChooseUs({ onOpenBooking }: WhyChooseUsProps) {
-  const cards = [
-    {
-      title: "OUR SALON",
-      subtitle: "Luxury Ambience",
-      description:
-        "Jugnu's Saloon offers bespoke beauty, makeup, private VIP suites, and complimentary tea in a serene atmosphere.",
-      buttonText: "Book Appointment",
-      action: () => onOpenBooking(),
-      icon: (
-        <svg
-          className="w-6 h-6 text-[#996515]"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={1.8}
-            d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"
-          />
-        </svg>
-      ),
-    },
-    {
-      title: "WE LOVE TO SERVE",
-      subtitle: "Artistry & Care",
-      description:
-        "Our certified master artists & aestheticians work with your features to deliver a personalized look that stands out.",
-      buttonText: "Get Services",
-      action: () => onOpenBooking(),
-      icon: (
-        <svg
-          className="w-6 h-6 text-[#996515]"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={1.8}
-            d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-          />
-        </svg>
-      ),
-    },
-    {
-      title: "GIFT VOUCHERS",
-      subtitle: "Exclusive Pass",
-      description:
-        "Treat your loved ones to an unforgettable signature bridal makeover, 24K gold facial, or luxury spa treatment.",
-      buttonText: "Buy A Gift Voucher",
-      action: () => onOpenBooking("Gift Voucher Inquiry"),
-      icon: (
-        <svg
-          className="w-6 h-6 text-[#996515]"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={1.8}
-            d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V6a2 2 0 10-2 2h2zm0 13C10.832 19.877 8 18.23 8 15V8h8v7c0 3.23-2.832 4.877-4 6z"
-          />
-        </svg>
-      ),
-    },
-  ];
-
   return (
-    <section id="why-us" className="py-20 bg-[#FAFAFA] relative overflow-hidden">
-      {/* Background Gold Glare */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-[#D4AF37]/10 rounded-full blur-[140px] pointer-events-none" />
+    <section id="why-us" className="py-20 bg-[#FFFFFF] relative overflow-hidden">
+      {/* Subtle gold bloom */}
+      <div className="absolute bottom-0 right-0 w-[500px] h-[500px] bg-[#D4AF37]/5 rounded-full blur-[120px] pointer-events-none" />
 
-      <div className="max-w-[1480px] mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-        {/* Header Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start mb-16">
-          <div className="lg:col-span-6">
-            <h2 className="font-sans text-3xl sm:text-4xl font-extrabold text-[#111111] uppercase tracking-tight leading-tight">
-              A SIGNATURE BEAUTY EXPERIENCE LIKE NO OTHER
-            </h2>
-          </div>
+      <div className="max-w-[1480px] mx-auto px-4 sm:px-6 lg:px-16 relative z-10">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-center">
 
-          <div className="lg:col-span-6 flex items-center">
-            <p className="text-slate-600 text-sm sm:text-base leading-relaxed font-normal">
-              At Jugnu&apos;s Saloon, we offer a complete luxury beauty lounge. Our artists work with your vision to deliver a personalized experience that elevates your confidence and natural glow.
-            </p>
-          </div>
-        </div>
+          {/* ── LEFT: Image card with overlay heading ── */}
+          <div className="relative rounded-2xl overflow-hidden shadow-2xl group" style={{ minHeight: "480px" }}>
+            <Image
+              src="/images/bridal_makeup.png"
+              alt="Diverse Styling at Jugnu's Saloon"
+              fill
+              className="object-cover object-center group-hover:scale-105 transition-transform duration-700"
+            />
 
-        {/* 3 White Feature Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          {cards.map((item, idx) => (
+            {/* Dark gradient overlay */}
             <div
-              key={idx}
-              className="bg-white rounded-2xl p-8 border border-slate-200 shadow-[0_4px_25px_rgba(0,0,0,0.03)] hover:shadow-[0_10px_35px_rgba(212,175,55,0.15)] hover:border-[#D4AF37]/60 transition-all duration-300 flex flex-col justify-between text-center items-center space-y-6 group"
-            >
-              {/* Soft Taupe/Gold Icon Pill */}
-              <div className="w-16 h-16 rounded-2xl bg-[#F5E8C7] border border-[#D4AF37]/40 flex items-center justify-center group-hover:scale-110 transition-transform">
-                {item.icon}
-              </div>
+              className="absolute inset-0"
+              style={{
+                background:
+                  "linear-gradient(160deg, rgba(10,10,10,0.50) 0%, rgba(10,10,10,0.72) 55%, rgba(10,10,10,0.92) 100%)",
+              }}
+            />
 
-              <div className="space-y-2">
-                <h3 className="font-sans text-lg font-bold text-[#111111] uppercase tracking-wider">
-                  {item.title}
-                </h3>
-                <p className="text-slate-500 text-xs font-normal leading-relaxed">
-                  {item.description}
-                </p>
-              </div>
+            {/* Subtle gold inner border */}
+            <div
+              className="absolute inset-0 rounded-2xl pointer-events-none"
+              style={{ boxShadow: "inset 0 0 0 1px rgba(212,175,55,0.25)" }}
+            />
 
-              <button
-                onClick={item.action}
-                className="w-full py-3 rounded-full border border-slate-300 hover:border-[#111111] text-[#111111] font-bold text-xs uppercase tracking-wider hover:bg-[#111111] hover:text-white transition-all cursor-pointer"
+            {/* Text overlay — anchored to bottom */}
+            <div className="absolute inset-0 flex flex-col justify-end p-8 sm:p-10">
+              <div className="w-10 h-[2px] mb-5" style={{ backgroundColor: "#D4AF37" }} />
+
+              <h2
+                className="font-sans font-extrabold text-white uppercase leading-tight mb-4"
+                style={{ fontSize: "clamp(2rem, 3.2vw, 2.8rem)", letterSpacing: "-0.01em" }}
               >
-                {item.buttonText}
+                Diverse<br />
+                <span style={{ color: "#D4AF37" }}>Styling</span>
+              </h2>
+
+              <p className="font-georgia text-white/75 text-sm sm:text-[15px] leading-relaxed max-w-sm">
+                The ethos of Jugnu&apos;s Saloon is to provide a haven of indulgent satisfaction — a place to soothe the mind, the body and soul.
+              </p>
+            </div>
+          </div>
+
+          {/* ── RIGHT: Content ── */}
+          <div className="flex flex-col justify-center space-y-7">
+
+            {/* Description */}
+            <p className="font-georgia text-slate-700 text-base sm:text-[17px] leading-relaxed">
+              Jugnu&apos;s Saloon is a full-service beauty salon dedicated to providing high customer satisfaction through excellent services. Our beauty and hair salon is a top-of-the-line brand, and has become one of the biggest luxury salon names in the region.
+            </p>
+
+            {/* Gold checkmark bullet list */}
+            <ul className="space-y-4">
+              {highlights.map((point, idx) => (
+                <li key={idx} className="flex items-start gap-3">
+                  <span
+                    className="mt-0.5 flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center"
+                    style={{ backgroundColor: "rgba(212,175,55,0.12)", border: "1px solid rgba(212,175,55,0.50)" }}
+                  >
+                    <svg width="10" height="8" viewBox="0 0 10 8" fill="none">
+                      <path d="M1 4L3.5 6.5L9 1" stroke="#D4AF37" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  </span>
+                  <span className="text-[#111111] text-sm font-medium leading-snug">{point}</span>
+                </li>
+              ))}
+            </ul>
+
+            {/* Thin divider */}
+            <div className="w-full h-px bg-slate-200" />
+
+            {/* Italic pull-quote */}
+            <p className="font-georgia text-slate-500 text-sm leading-relaxed italic">
+              &ldquo;Whilst at the leading edge of trends and artistry, Jugnu&apos;s Saloon prides itself on listening and satisfying clients — creating effortless, wearable beauty with creative flair that never goes out of style.&rdquo;
+            </p>
+
+            {/* CTA */}
+            <div className="pt-2">
+              <button
+                onClick={() => onOpenBooking()}
+                className="cursor-pointer inline-flex items-center gap-2 font-sans font-bold text-xs uppercase tracking-[0.18em] transition-all"
+                style={{
+                  backgroundColor: "#111111",
+                  color: "#FFFFFF",
+                  padding: "14px 32px",
+                  borderRadius: "3px",
+                  border: "2px solid #111111",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = "#D4AF37";
+                  e.currentTarget.style.borderColor = "#D4AF37";
+                  e.currentTarget.style.color = "#111111";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = "#111111";
+                  e.currentTarget.style.borderColor = "#111111";
+                  e.currentTarget.style.color = "#FFFFFF";
+                }}
+              >
+                Book an Appointment
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M5 12h14M12 5l7 7-7 7" />
+                </svg>
               </button>
             </div>
-          ))}
+
+          </div>
         </div>
       </div>
     </section>
   );
 }
+
+

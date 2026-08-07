@@ -38,7 +38,7 @@ export default function Stylists({ onOpenBooking }: StylistProps) {
           <h2 className="font-sans text-3xl sm:text-4xl font-extrabold text-[#111111] uppercase tracking-tight">
             MEET OUR BEAUTY & MAKEUP ARTISTS
           </h2>
-          <p className="text-slate-600 text-sm font-normal">
+          <p className="text-slate-600 text-sm font-normal font-georgia">
             Our team of award-winning makeup artists and aestheticians bring world-class artistry to every appointment.
           </p>
         </div>
@@ -72,7 +72,7 @@ export default function Stylists({ onOpenBooking }: StylistProps) {
                 </p>
               </div>
 
-              <p className="text-slate-600 text-xs font-normal leading-relaxed">
+              <p className="text-slate-600 text-xs font-normal leading-relaxed font-georgia">
                 {artist.bio}
               </p>
 

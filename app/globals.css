@@ -2,6 +2,7 @@
 
 :root {
   --font-helvetica: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --font-georgia: "Playfair Display", Georgia, serif;
   
   --bg-primary: #FAFAFA;
   --bg-surface: #FFFFFF;
@@ -25,6 +26,12 @@ body {
   overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+/* Playfair Display secondary font utility */
+.font-georgia {
+  font-family: var(--font-georgia);
+  font-size: 1.08em;
 }
 
 h1, h2, h3, h4, h5, h6 {

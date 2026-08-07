@@ -27,4 +27,5 @@
 - **Section White**: `#FFFFFF` (Pure White card & section panels)
 - **Text & Headings**: `#111111` (Deep Obsidian Black)
 - **Accent Gold**: `#D4AF37` / `#996515`
-- **Font Stack**: `"Helvetica Neue", Helvetica, Arial, sans-serif`
+- **Primary Font**: `"Helvetica Neue", Helvetica, Arial, sans-serif` — used for body text & headings
+- **Secondary Font**: `"Playfair Display", Georgia, serif` — used for editorial accents, pull-quotes & decorative text
