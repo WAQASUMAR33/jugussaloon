@@ -177,11 +177,10 @@ export default function GoogleReviews() {
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
                       {review.profile_photo_url ? (
-                        <Image
+                        /* eslint-disable-next-line @next/next/no-img-element */
+                        <img
                           src={review.profile_photo_url}
                           alt={review.author_name}
-                          width={48}
-                          height={48}
                           className="w-12 h-12 rounded-full object-cover border border-slate-200"
                         />
                       ) : (

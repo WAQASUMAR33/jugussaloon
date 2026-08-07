@@ -5,6 +5,7 @@ import Navbar from "../components/Navbar";
 import AboutSection from "../components/AboutSection";
 import Stylists from "../components/Stylists";
 import WhyChooseUs from "../components/WhyChooseUs";
+import LocationMap from "../components/LocationMap";
 import Footer from "../components/Footer";
 import BookingModal from "../components/BookingModal";
 import Image from "next/image";
@@ -50,6 +51,9 @@ export default function AboutPage() {
 
       {/* Meet Our Artists */}
       <Stylists onOpenBooking={handleOpenBooking} />
+
+      {/* Saloon Location & Google Map */}
+      <LocationMap />
 
       <Footer onOpenBooking={() => handleOpenBooking()} />
 

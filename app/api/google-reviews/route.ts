@@ -128,8 +128,8 @@ export async function GET() {
     rating: 4.9,
     user_ratings_total: 148,
     reviews: FALLBACK_REVIEWS,
-    place_url: "https://maps.google.com/?q=Jugnu+Saloon",
-    name: "Jugnu's Saloon",
+    place_url: "https://maps.app.goo.gl/HfbmMwJ6ugTEAmPv8",
+    name: "Jugnu's Saloon Phalia",
     is_live: false,
   });
 }

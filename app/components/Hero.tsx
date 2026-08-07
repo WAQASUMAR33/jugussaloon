@@ -97,7 +97,7 @@ export default function Hero({ onOpenBooking }: HeroProps) {
 
             {/* Secondary: Call */}
             <a
-              href="tel:+11234567890"
+              href="tel:03194415757"
               className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.20em] transition-colors"
               style={{ color: "rgba(255,255,255,0.80)", textDecoration: "none" }}
               onMouseEnter={(e) => (e.currentTarget.style.color = "#D4AF37")}
@@ -117,7 +117,7 @@ export default function Hero({ onOpenBooking }: HeroProps) {
               >
                 <path d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
               </svg>
-              Call Us
+              0319 4415757
             </a>
           </div>
 

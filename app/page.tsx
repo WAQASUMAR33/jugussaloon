@@ -8,6 +8,7 @@ import AboutSection from "./components/AboutSection";
 import ServiceAndWorkflowSection from "./components/ServiceAndWorkflowSection";
 import Stylists from "./components/Stylists";
 import NewsPress from "./components/NewsPress";
+import LocationMap from "./components/LocationMap";
 import BookingModal from "./components/BookingModal";
 import Footer from "./components/Footer";
 import Link from "next/link";
@@ -48,6 +49,9 @@ export default function Home() {
 
       {/* Our Work, Press & Reviews */}
       <NewsPress />
+
+      {/* Saloon Location & Map Section */}
+      <LocationMap />
 
       {/* View Full Gallery Banner Link */}
       <div className="bg-[#FAFAFA] py-8 text-center border-t border-slate-200">
