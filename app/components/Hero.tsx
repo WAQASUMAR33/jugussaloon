@@ -15,6 +15,7 @@ const slides = [
     desc: "Premium bridal makeovers, signature hair transformations & 24K gold hydrafacials crafted with world-class artistry.",
     image: "/images/hero_salon.png",
     alt: "Jugnu's Saloon luxury interior",
+    objectPosition: "center center",
   },
   {
     id: 2,
@@ -23,6 +24,7 @@ const slides = [
     desc: "Step into your dream bridal look with airbrush precision, glowing complexion sculpting, and traditional draping excellence.",
     image: "/images/hero-1.jpeg",
     alt: "Royal HD Airbrush Bridal Makeup",
+    objectPosition: "center top",
   },
   {
     id: 3,
@@ -31,6 +33,7 @@ const slides = [
     desc: "Rejuvenate your skin with our signature 24K gold cellular facial rituals, scalp treatments, and organic hair masks.",
     image: "/images/beauty_facial.png",
     alt: "24K Gold Hydrafacial & Skin Spa",
+    objectPosition: "center center",
   },
 ];
 
@@ -85,7 +88,8 @@ export default function Hero({ onOpenBooking }: HeroProps) {
             alt={s.alt}
             fill
             priority={index === 0}
-            className="object-cover object-center"
+            className="object-cover"
+            style={{ objectPosition: s.objectPosition || "center center" }}
           />
 
           {/* Heavy Dark Left Gradient: Prevents text-image collision */}
