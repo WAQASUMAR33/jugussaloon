@@ -21,7 +21,7 @@ const slides = [
     titleLine1: "ROYAL BRIDAL",
     titleLine2: "TRANSFORMATIONS",
     desc: "Step into your dream bridal look with airbrush precision, glowing complexion sculpting, and traditional draping excellence.",
-    image: "/images/bridal_makeup.png",
+    image: "/images/hero-1.jpeg",
     alt: "Royal HD Airbrush Bridal Makeup",
   },
   {
@@ -36,6 +36,7 @@ const slides = [
 
 export default function Hero({ onOpenBooking }: HeroProps) {
   const [currentSlide, setCurrentSlide] = useState(0);
+  const [rating, setRating] = useState<number | null>(null);
 
   // Automatic slide transition every 5 seconds
   useEffect(() => {
@@ -43,6 +44,24 @@ export default function Hero({ onOpenBooking }: HeroProps) {
       setCurrentSlide((prev) => (prev + 1) % slides.length);
     }, 5000);
     return () => clearInterval(timer);
+  }, []);
+
+  // Fetch live Google rating dynamically
+  useEffect(() => {
+    async function fetchRating() {
+      try {
+        const res = await fetch("/api/google-reviews");
+        if (res.ok) {
+          const json = await res.json();
+          if (typeof json.rating === "number") {
+            setRating(json.rating);
+          }
+        }
+      } catch (err) {
+        console.error("Failed to fetch Google rating for Hero component:", err);
+      }
+    }
+    fetchRating();
   }, []);
 
   const slide = slides[currentSlide];
@@ -157,7 +176,9 @@ export default function Hero({ onOpenBooking }: HeroProps) {
             </div>
             <div className="w-px h-8 bg-white/20" />
             <div>
-              <p className="text-2xl font-extrabold text-white">5.0 ★</p>
+              <p className="text-2xl font-extrabold text-white">
+                {rating !== null ? rating.toFixed(1) : "5.0"} ★
+              </p>
               <p className="text-[10px] uppercase tracking-widest text-slate-400 font-bold mt-0.5">
                 Google Rating
               </p>
