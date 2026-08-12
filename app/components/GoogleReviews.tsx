@@ -52,7 +52,7 @@ export default function GoogleReviews() {
   return (
     <section id="google-reviews" className="py-20 bg-[#FAFAFA] relative border-t border-slate-200">
       <div className="max-w-[1480px] mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Main Section Heading - STRICT RULE: NO PILL TAGS OVER HEADINGS */}
+        {/* Main Section Heading */}
         <div className="text-center max-w-3xl mx-auto mb-14 space-y-3">
           <h2 className="font-sans text-3xl sm:text-4xl lg:text-5xl font-extrabold text-[#111111] uppercase tracking-tight">
             CLIENT REVIEWS & GOOGLE RATING
@@ -63,102 +63,151 @@ export default function GoogleReviews() {
         </div>
 
         {/* Google Summary Header Card */}
-        <div className="bg-white rounded-3xl p-8 sm:p-10 border border-slate-200 shadow-sm mb-12 flex flex-col md:flex-row items-center justify-between gap-8">
-          <div className="flex flex-col sm:flex-row items-center gap-6 text-center sm:text-left">
-            {/* Google Icon Badge */}
-            <div className="w-20 h-20 rounded-2xl bg-[#111111] border border-[#D4AF37]/40 flex items-center justify-center p-4 shadow-sm shrink-0">
-              <svg className="w-12 h-12" viewBox="0 0 24 24" fill="none">
-                <path
-                  d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-                  fill="#4285F4"
-                />
-                <path
-                  d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-                  fill="#34A853"
-                />
-                <path
-                  d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"
-                  fill="#FBBC05"
-                />
-                <path
-                  d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"
-                  fill="#EA4335"
-                />
-              </svg>
-            </div>
-
-            {/* Score & Stars */}
-            <div className="space-y-1">
-              <div className="flex items-center justify-center sm:justify-start gap-3">
-                <span className="font-sans text-4xl sm:text-5xl font-black text-[#111111]">
-                  {rating.toFixed(1)}
-                </span>
-                <div>
-                  <div className="flex text-[#D4AF37] text-lg sm:text-xl font-bold tracking-tight">
-                    {"★".repeat(Math.round(rating))}
+        <div className="bg-white rounded-3xl p-8 sm:p-10 border border-slate-200 shadow-sm mb-12 min-h-[140px] flex items-center">
+          {loading ? (
+            /* Skeleton Loading for Header Card */
+            <div className="w-full flex flex-col md:flex-row items-center justify-between gap-8 animate-pulse">
+              <div className="flex flex-col sm:flex-row items-center gap-6 text-center sm:text-left">
+                <div className="w-20 h-20 rounded-2xl bg-slate-200 shrink-0"></div>
+                <div className="space-y-3">
+                  <div className="flex items-center justify-center sm:justify-start gap-3">
+                    <div className="h-10 w-20 bg-slate-200 rounded-lg"></div>
+                    <div className="space-y-1.5">
+                      <div className="h-5 w-28 bg-slate-200 rounded"></div>
+                      <div className="h-3 w-36 bg-slate-100 rounded"></div>
+                    </div>
                   </div>
-                  <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
-                    Google Customer Score
-                  </span>
+                  <div className="h-4 w-52 bg-slate-100 rounded mx-auto sm:mx-0"></div>
                 </div>
               </div>
-              <p className="text-xs text-slate-600 font-medium">
-                Based on <span className="font-bold text-[#111111]">{totalReviews}+ authentic Google reviews</span>
-                {data?.is_live && (
-                  <span className="ml-2 inline-flex items-center gap-1 text-[10px] bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full font-bold">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                    Live Sync
-                  </span>
-                )}
-              </p>
+              <div className="flex flex-wrap items-center justify-center gap-3 shrink-0">
+                <div className="h-12 w-44 bg-slate-200 rounded-full"></div>
+                <div className="h-12 w-44 bg-slate-100 rounded-full"></div>
+              </div>
             </div>
-          </div>
+          ) : (
+            /* Real Google Summary Header Content */
+            <div className="w-full flex flex-col md:flex-row items-center justify-between gap-8">
+              <div className="flex flex-col sm:flex-row items-center gap-6 text-center sm:text-left">
+                {/* Google Icon Badge */}
+                <div className="w-20 h-20 rounded-2xl bg-[#111111] border border-[#D4AF37]/40 flex items-center justify-center p-4 shadow-sm shrink-0">
+                  <svg className="w-12 h-12" viewBox="0 0 24 24" fill="none">
+                    <path
+                      d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+                      fill="#4285F4"
+                    />
+                    <path
+                      d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+                      fill="#34A853"
+                    />
+                    <path
+                      d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"
+                      fill="#FBBC05"
+                    />
+                    <path
+                      d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"
+                      fill="#EA4335"
+                    />
+                  </svg>
+                </div>
 
-          {/* Action Buttons */}
-          <div className="flex flex-wrap items-center justify-center gap-3 shrink-0">
-            <a
-              href={placeUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="px-6 py-3.5 rounded-full bg-[#111111] text-white font-bold text-xs uppercase tracking-widest hover:bg-[#D4AF37] hover:text-black transition-all shadow-sm flex items-center gap-2"
-            >
-              <span>Review Us on Google</span>
-              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                <path
-                  fillRule="evenodd"
-                  d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z"
-                  clipRule="evenodd"
-                />
-              </svg>
-            </a>
-            <a
-              href={placeUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="px-6 py-3.5 rounded-full bg-[#FAFAFA] text-[#111111] font-bold text-xs uppercase tracking-widest border border-slate-300 hover:border-[#111111] transition-all"
-            >
-              View on Google Maps
-            </a>
-          </div>
+                {/* Score & Stars */}
+                <div className="space-y-1">
+                  <div className="flex items-center justify-center sm:justify-start gap-3">
+                    <span className="font-sans text-4xl sm:text-5xl font-black text-[#111111]">
+                      {rating.toFixed(1)}
+                    </span>
+                    <div>
+                      <div className="flex text-[#D4AF37] text-lg sm:text-xl font-bold tracking-tight">
+                        {"★".repeat(Math.round(rating))}
+                      </div>
+                      <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                        Google Customer Score
+                      </span>
+                    </div>
+                  </div>
+                  <p className="text-xs text-slate-600 font-medium">
+                    Based on <span className="font-bold text-[#111111]">{totalReviews}+ authentic Google reviews</span>
+                    {data?.is_live && (
+                      <span className="ml-2 inline-flex items-center gap-1 text-[10px] bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full font-bold">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                        Live Sync
+                      </span>
+                    )}
+                  </p>
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex flex-wrap items-center justify-center gap-3 shrink-0">
+                <a
+                  href={placeUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-6 py-3.5 rounded-full bg-[#111111] text-white font-bold text-xs uppercase tracking-widest hover:bg-[#D4AF37] hover:text-black transition-all shadow-sm flex items-center gap-2"
+                >
+                  <span>Review Us on Google</span>
+                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                    <path
+                      fillRule="evenodd"
+                      d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                </a>
+                <a
+                  href={placeUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-6 py-3.5 rounded-full bg-[#FAFAFA] text-[#111111] font-bold text-xs uppercase tracking-widest border border-slate-300 hover:border-[#111111] transition-all"
+                >
+                  View on Google Maps
+                </a>
+              </div>
+            </div>
+          )}
         </div>
 
-        {/* Loading Skeleton */}
+        {/* Loading Skeleton Grid */}
         {loading && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {[1, 2, 3, 4, 5, 6].map((i) => (
               <div
                 key={i}
-                className="bg-white p-6 rounded-2xl border border-slate-200 space-y-4 animate-pulse"
+                className="bg-white p-6 rounded-2xl border border-slate-200 space-y-4 animate-pulse shadow-sm flex flex-col justify-between"
               >
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-full bg-slate-200"></div>
-                  <div className="space-y-2 flex-1">
-                    <div className="h-4 bg-slate-200 rounded w-1/2"></div>
-                    <div className="h-3 bg-slate-100 rounded w-1/3"></div>
+                <div className="space-y-4">
+                  {/* Author Header Skeleton */}
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-12 h-12 rounded-full bg-slate-200 shrink-0"></div>
+                      <div className="space-y-2">
+                        <div className="h-4 bg-slate-200 rounded w-28"></div>
+                        <div className="h-3 bg-slate-100 rounded w-16"></div>
+                      </div>
+                    </div>
+                    <div className="w-5 h-5 rounded-full bg-slate-200 shrink-0"></div>
+                  </div>
+
+                  {/* Stars Skeleton */}
+                  <div className="flex items-center gap-2">
+                    <div className="h-4 bg-slate-200 rounded w-24"></div>
+                    <div className="h-4 bg-slate-100 rounded w-20"></div>
+                  </div>
+
+                  {/* Review Text Skeleton */}
+                  <div className="space-y-2 pt-1">
+                    <div className="h-3 bg-slate-200 rounded w-full"></div>
+                    <div className="h-3 bg-slate-200 rounded w-11/12"></div>
+                    <div className="h-3 bg-slate-100 rounded w-3/4"></div>
                   </div>
                 </div>
-                <div className="h-3 bg-slate-100 rounded w-full"></div>
-                <div className="h-3 bg-slate-100 rounded w-4/5"></div>
+
+                {/* Footer Skeleton */}
+                <div className="pt-3 border-t border-slate-100 flex items-center justify-between">
+                  <div className="h-3 bg-slate-100 rounded w-28"></div>
+                  <div className="h-3 bg-slate-200 rounded w-20"></div>
+                </div>
               </div>
             ))}
           </div>

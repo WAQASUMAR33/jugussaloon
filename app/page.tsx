@@ -4,9 +4,8 @@ import { useState } from "react";
 import Navbar from "./components/Navbar";
 import Hero from "./components/Hero";
 import WhyChooseUs from "./components/WhyChooseUs";
-import AboutSection from "./components/AboutSection";
 import ServiceAndWorkflowSection from "./components/ServiceAndWorkflowSection";
-import Stylists from "./components/Stylists";
+import ProductsShowcase from "./components/ProductsShowcase";
 import NewsPress from "./components/NewsPress";
 import LocationMap from "./components/LocationMap";
 import BookingModal from "./components/BookingModal";
@@ -38,16 +37,13 @@ export default function Home() {
       {/* Benefits & Signature Experience */}
       <WhyChooseUs onOpenBooking={handleOpenBooking} />
 
-      {/* About Jugnu's Saloon Section */}
-      <AboutSection onOpenBooking={() => handleOpenBooking("Beauty Consultation")} />
-
       {/* Combined Services & How It Works Master Section (Inspiration Design) */}
       <ServiceAndWorkflowSection onOpenBooking={handleOpenBooking} />
 
-      {/* Beauty & Makeup Artists Team */}
-      <Stylists onOpenBooking={handleOpenBooking} />
+      {/* Products Showcase Section (Home Page) */}
+      <ProductsShowcase onOpenBooking={handleOpenBooking} />
 
-      {/* Our Work, Press & Reviews */}
+      {/* Google 5-Star Reviews Section */}
       <NewsPress />
 
       {/* Saloon Location & Map Section */}

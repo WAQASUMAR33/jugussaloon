@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
+import { getServiceCategories, getServices, getProducts } from "../lib/api";
 
 interface ServiceAndWorkflowSectionProps {
   onOpenBooking: (serviceName?: string) => void;
@@ -11,7 +12,8 @@ interface ServiceItem {
   id: string;
   name: string;
   price: string;
-  duration: string;
+  originalPrice?: string;
+  discount?: number;
 }
 
 interface CategoryData {
@@ -24,69 +26,7 @@ interface CategoryData {
   image: string;
 }
 
-const categories: CategoryData[] = [
-  {
-    id: "bridal",
-    label: "Bridal & Makeup",
-    icon: "✦",
-    headline: "Bridal & Glamour Makeup",
-    subline: "HD Airbrush transformations crafted for your most important day.",
-    image: "/images/bridal_makeup.png",
-    services: [
-      { id: "b1", name: "Royal HD Airbrush Bridal Glam", price: "$350", duration: "180 min" },
-      { id: "b2", name: "Engagement & Reception Look", price: "$220", duration: "120 min" },
-      { id: "b3", name: "Celebration Party Makeup", price: "$130", duration: "75 min" },
-      { id: "b4", name: "Signature Eye Makeup & Lashes", price: "$75", duration: "45 min" },
-      { id: "b5", name: "Soft Glow Event Makeup", price: "$95", duration: "60 min" },
-    ],
-  },
-  {
-    id: "facials",
-    label: "Facials & Skin",
-    icon: "◈",
-    headline: "Facials & Skin Spa",
-    subline: "Deep-nourishing rituals that reveal your most luminous self.",
-    image: "/images/beauty_facial.png",
-    services: [
-      { id: "f1", name: "24K Gold Hydrafacial Spa", price: "$160", duration: "75 min" },
-      { id: "f2", name: "Organic Deep Cleanse Ritual", price: "$110", duration: "60 min" },
-      { id: "f3", name: "Collagen Anti-Aging Lifting", price: "$180", duration: "90 min" },
-      { id: "f4", name: "Radiance Vitamin C Glow", price: "$125", duration: "60 min" },
-      { id: "f5", name: "Herbal Polish & Exfoliation", price: "$85", duration: "45 min" },
-    ],
-  },
-  {
-    id: "hair",
-    label: "Hair & Styling",
-    icon: "◇",
-    headline: "Haircuts, Styling & Color",
-    subline: "Precision cuts, signature balayage and restorative hair rituals.",
-    image: "/images/hair_styling.png",
-    services: [
-      { id: "h1", name: "Couture Layered Cut & Blowout", price: "$85", duration: "60 min" },
-      { id: "h2", name: "Signature Hand-Painted Balayage", price: "$220", duration: "150 min" },
-      { id: "h3", name: "Full Head Foil Highlights", price: "$190", duration: "120 min" },
-      { id: "h4", name: "Brazilian Keratin Smoothing", price: "$250", duration: "120 min" },
-      { id: "h5", name: "Deep Scalp Detox Treatment", price: "$95", duration: "45 min" },
-    ],
-  },
-  {
-    id: "nails",
-    label: "Nails & Spa",
-    icon: "◉",
-    headline: "Nails & Mani-Pedi Spa",
-    subline: "Luxury gel extensions, 3D art and relaxing spa manicures.",
-    image: "/images/hair_washing.png",
-    services: [
-      { id: "n1", name: "Full Set Gel / Acrylic Extensions", price: "$110", duration: "90 min" },
-      { id: "n2", name: "Royal Rose Petal Mani-Pedi", price: "$95", duration: "75 min" },
-      { id: "n3", name: "Custom 3D Acrylic Nail Art", price: "$45", duration: "30 min" },
-      { id: "n4", name: "Paraffin Hydrating Spa Pedi", price: "$65", duration: "50 min" },
-      { id: "n5", name: "Classic French Gel Overlay", price: "$55", duration: "40 min" },
-    ],
-  },
-];
-
+// Workflow Process Steps
 const workflowSteps = [
   {
     num: "01",
@@ -113,53 +53,122 @@ const workflowSteps = [
 export default function ServiceAndWorkflowSection({
   onOpenBooking,
 }: ServiceAndWorkflowSectionProps) {
-  const [activeId, setActiveId] = useState("bridal");
-  const current = categories.find((c) => c.id === activeId) || categories[0];
+  const [categoriesList, setCategoriesList] = useState<CategoryData[]>([]);
+  const [activeId, setActiveId] = useState<string>("");
+  const [loading, setLoading] = useState<boolean>(true);
+
+  useEffect(() => {
+    async function loadApiData() {
+      try {
+        const [apiCategories, apiServices, apiProducts] = await Promise.all([
+          getServiceCategories(),
+          getServices(),
+          getProducts(),
+        ]);
+
+        const hasCategories = apiCategories && apiCategories.length > 0;
+        const hasServices = apiServices && apiServices.length > 0;
+
+        const icons = ["✦", "◈", "◇", "◉", "❖", "⚜"];
+        const images = [
+          "/images/bridal_makeup.png",
+          "/images/beauty_facial.png",
+          "/images/hair_styling.png",
+          "/images/hair_washing.png",
+        ];
+
+        let updatedCategories: CategoryData[] = [];
+
+        if (hasCategories) {
+          updatedCategories = apiCategories.map((cat, idx) => {
+            const matchedServices = hasServices
+              ? apiServices
+                  .filter((s) => s.category?.id === cat.id || s.category?.title?.toLowerCase() === cat.title.toLowerCase())
+                  .map((s) => {
+                    const finalPrice = s.discounted_price || s.price;
+                    const hasDiscount = s.discount && s.discount > 0 && s.discounted_price && s.discounted_price < s.price;
+                    return {
+                      id: String(s.id),
+                      name: s.title,
+                      price: `Rs. ${finalPrice.toLocaleString()}`,
+                      originalPrice: hasDiscount ? `Rs. ${s.price.toLocaleString()}` : undefined,
+                      discount: s.discount || 0,
+                    };
+                  })
+              : [];
+
+            return {
+              id: `cat-${cat.id}`,
+              label: cat.title,
+              icon: icons[idx % icons.length],
+              headline: cat.title,
+              subline: cat.description || `Luxury ${cat.title} treatments at Jugnu's Saloon.`,
+              services: matchedServices,
+              image: images[idx % images.length],
+            };
+          });
+        }
+
+        if (updatedCategories.length > 0) {
+          setCategoriesList(updatedCategories);
+          setActiveId(updatedCategories[0].id);
+        }
+      } catch (err) {
+        console.error("Error populating live services:", err);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    loadApiData();
+  }, []);
+
+  const current = categoriesList.find((c) => c.id === activeId) || categoriesList[0];
 
   return (
     <section
       id="services"
-      className="relative bg-[#0A0A0B] text-white overflow-hidden"
+      className="relative bg-[#FAFAFA] text-[#111111] overflow-hidden border-t border-slate-200"
       style={{ padding: "100px 0 120px" }}
     >
-      {/* ── Background Gold Atmosphere ─────────────────────────── */}
+      {/* ── Background Gold Flare & Ambient Atmosphere ─────────────────────────── */}
       <div
         className="pointer-events-none absolute inset-0"
         aria-hidden="true"
       >
-        {/* top-left bloom */}
+        {/* Top-Left Radiant Gold Flare */}
         <div
-          className="absolute -top-32 -left-32 w-[560px] h-[560px] rounded-full"
+          className="absolute -top-32 -left-32 w-[600px] h-[600px] rounded-full"
           style={{
             background:
-              "radial-gradient(circle, rgba(212,175,55,0.22) 0%, transparent 68%)",
-            filter: "blur(80px)",
+              "radial-gradient(circle, rgba(212,175,55,0.25) 0%, rgba(212,175,55,0.05) 50%, transparent 70%)",
+            filter: "blur(70px)",
           }}
         />
-        {/* bottom-right bloom */}
+        {/* Bottom-Right Soft Gold Flare */}
         <div
-          className="absolute -bottom-32 -right-32 w-[480px] h-[480px] rounded-full"
+          className="absolute -bottom-32 -right-32 w-[550px] h-[550px] rounded-full"
           style={{
             background:
-              "radial-gradient(circle, rgba(212,175,55,0.18) 0%, transparent 68%)",
-            filter: "blur(80px)",
+              "radial-gradient(circle, rgba(212,175,55,0.20) 0%, rgba(212,175,55,0.04) 50%, transparent 70%)",
+            filter: "blur(70px)",
           }}
         />
-        {/* centre whisper */}
+        {/* Center Golden Beam */}
         <div
-          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[600px] rounded-full opacity-40"
+          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[850px] h-[650px] rounded-full opacity-60"
           style={{
             background:
-              "radial-gradient(ellipse, rgba(212,175,55,0.08) 0%, transparent 65%)",
+              "radial-gradient(ellipse, rgba(212,175,55,0.10) 0%, transparent 65%)",
             filter: "blur(60px)",
           }}
         />
-        {/* thin gold top border line */}
+        {/* Top Gold Divider Line */}
         <div
-          className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-px"
+          className="absolute top-0 left-1/2 -translate-x-1/2 w-[700px] h-[2px]"
           style={{
             background:
-              "linear-gradient(90deg, transparent, rgba(212,175,55,0.5), transparent)",
+              "linear-gradient(90deg, transparent, rgba(212,175,55,0.8), transparent)",
           }}
         />
       </div>
@@ -169,301 +178,356 @@ export default function ServiceAndWorkflowSection({
         {/* ── Section Heading ──────────────────────────────────── */}
         <div className="text-center mb-16 space-y-3">
           <p
-            className="text-[11px] font-semibold uppercase tracking-[0.3em]"
-            style={{ color: "#D4AF37" }}
+            className="text-[11px] font-bold uppercase tracking-[0.3em] text-[#996515]"
           >
-            Our Services
+            OUR SIGNATURE SERVICES
           </p>
           <h2
-            className="font-sans font-extrabold leading-tight text-white"
+            className="font-sans font-extrabold leading-tight text-[#111111] uppercase"
             style={{ fontSize: "clamp(2rem, 4vw, 3.25rem)" }}
           >
-            Beauty, Bridal & Spa Services
+            BEAUTY, BRIDAL & SPA SERVICES
           </h2>
           <div
-            className="w-14 h-[2px] mx-auto"
-            style={{ backgroundColor: "#D4AF37", opacity: 0.5 }}
+            className="w-16 h-[3px] mx-auto rounded-full bg-[#D4AF37]"
           />
         </div>
 
-        {/* ── Category Tabs ────────────────────────────────────── */}
-        <div className="flex items-center justify-center flex-wrap gap-3 mb-12">
-          {categories.map((cat) => {
-            const active = cat.id === activeId;
-            return (
-              <button
-                key={cat.id}
-                onClick={() => setActiveId(cat.id)}
-                className="cursor-pointer transition-all duration-200"
-                style={{
-                  padding: "10px 26px",
-                  borderRadius: "4px",
-                  fontSize: "11px",
-                  fontWeight: 700,
-                  letterSpacing: "0.18em",
-                  textTransform: "uppercase",
-                  border: active
-                    ? "1.5px solid #D4AF37"
-                    : "1.5px solid rgba(255,255,255,0.12)",
-                  backgroundColor: active
-                    ? "#D4AF37"
-                    : "rgba(255,255,255,0.04)",
-                  color: active ? "#111111" : "rgba(255,255,255,0.65)",
-                  boxShadow: active
-                    ? "0 0 20px rgba(212,175,55,0.25)"
-                    : "none",
-                }}
-                onMouseEnter={(e) => {
-                  if (!active) {
-                    e.currentTarget.style.color = "#fff";
-                    e.currentTarget.style.borderColor =
-                      "rgba(255,255,255,0.28)";
-                    e.currentTarget.style.backgroundColor =
-                      "rgba(255,255,255,0.08)";
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  if (!active) {
-                    e.currentTarget.style.color = "rgba(255,255,255,0.65)";
-                    e.currentTarget.style.borderColor =
-                      "rgba(255,255,255,0.12)";
-                    e.currentTarget.style.backgroundColor =
-                      "rgba(255,255,255,0.04)";
-                  }
-                }}
-              >
-                <span style={{ marginRight: "8px", opacity: 0.7 }}>
-                  {cat.icon}
-                </span>
-                {cat.label}
-              </button>
-            );
-          })}
-        </div>
-
-        {/* ── Main Panel ───────────────────────────────────────── */}
-        <div
-          className="grid grid-cols-1 lg:grid-cols-2 gap-0 overflow-hidden"
-          style={{
-            border: "1px solid rgba(255,255,255,0.10)",
-            borderRadius: "20px",
-            background: "#111113",
-            boxShadow: "0 40px 80px rgba(0,0,0,0.6)",
-          }}
-        >
-          {/* LEFT — Service List */}
-          <div
-            className="flex flex-col justify-between"
-            style={{
-              padding: "44px 48px",
-              borderRight: "1px solid rgba(255,255,255,0.08)",
-            }}
-          >
-            {/* heading */}
-            <div className="mb-8">
-              <h3
-                className="font-sans font-extrabold text-white leading-snug"
-                style={{ fontSize: "clamp(1.35rem, 2.2vw, 1.75rem)" }}
-              >
-                {current.headline}
-              </h3>
-              <p
-                className="mt-2 text-[13px] font-normal leading-relaxed"
-                style={{ color: "rgba(255,255,255,0.45)" }}
-              >
-                {current.subline}
-              </p>
+        {/* ── Skeleton Loading State ───────────────────────────── */}
+        {loading ? (
+          <div className="space-y-12 animate-pulse">
+            {/* Skeleton Category Tabs */}
+            <div className="flex items-center justify-center flex-wrap gap-3 mb-12">
+              {[1, 2, 3, 4].map((i) => (
+                <div
+                  key={i}
+                  className="h-11 w-40 bg-slate-200 rounded-lg border border-slate-300"
+                />
+              ))}
             </div>
 
-            {/* service rows */}
-            <div
-              className="flex-1"
-              style={{
-                borderTop: "1px solid rgba(255,255,255,0.08)",
-              }}
-            >
-              {current.services.map((item, idx) => (
+            {/* Skeleton Main Panel */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-0 overflow-hidden border border-slate-200 rounded-3xl bg-white p-8 lg:p-12 shadow-xl">
+              <div className="space-y-6 pr-0 lg:pr-8">
+                <div className="h-8 w-64 bg-slate-200 rounded" />
+                <div className="h-4 w-80 bg-slate-100 rounded" />
+                <div className="space-y-4 pt-6">
+                  {[1, 2, 3, 4].map((i) => (
+                    <div key={i} className="flex justify-between items-center py-3 border-b border-slate-100">
+                      <div className="space-y-2">
+                        <div className="h-4 w-48 bg-slate-200 rounded" />
+                        <div className="h-3 w-20 bg-slate-100 rounded" />
+                      </div>
+                      <div className="h-8 w-24 bg-slate-200 rounded" />
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div className="h-[450px] bg-slate-100 rounded-2xl hidden lg:block" />
+            </div>
+          </div>
+        ) : categoriesList.length === 0 ? (
+          <div className="text-center py-20 text-slate-500 font-medium">
+            No active categories available at the moment.
+          </div>
+        ) : (
+          <>
+            {/* ── Category Tabs (Light Theme with Gold Accent) ────────────────── */}
+            <div className="flex items-center justify-center flex-wrap gap-3 mb-12">
+              {categoriesList.map((cat) => {
+                const active = cat.id === activeId;
+                return (
+                  <button
+                    key={cat.id}
+                    onClick={() => setActiveId(cat.id)}
+                    className="cursor-pointer transition-all duration-300"
+                    style={{
+                      padding: "11px 28px",
+                      borderRadius: "6px",
+                      fontSize: "11px",
+                      fontWeight: 700,
+                      letterSpacing: "0.18em",
+                      textTransform: "uppercase",
+                      border: active
+                        ? "2px solid #D4AF37"
+                        : "1.5px solid rgba(0,0,0,0.12)",
+                      backgroundColor: active
+                        ? "#111111"
+                        : "#FFFFFF",
+                      color: active ? "#D4AF37" : "#111111",
+                      boxShadow: active
+                        ? "0 6px 20px rgba(212,175,55,0.30)"
+                        : "0 2px 8px rgba(0,0,0,0.04)",
+                    }}
+                    onMouseEnter={(e) => {
+                      if (!active) {
+                        e.currentTarget.style.color = "#996515";
+                        e.currentTarget.style.borderColor = "#D4AF37";
+                        e.currentTarget.style.backgroundColor = "#FFFDF7";
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (!active) {
+                        e.currentTarget.style.color = "#111111";
+                        e.currentTarget.style.borderColor = "rgba(0,0,0,0.12)";
+                        e.currentTarget.style.backgroundColor = "#FFFFFF";
+                      }
+                    }}
+                  >
+                    <span style={{ marginRight: "8px", color: active ? "#D4AF37" : "#996515" }}>
+                      {cat.icon}
+                    </span>
+                    {cat.label}
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* ── Main Panel (White Canvas & Gold Flare Glow) ──────────────────── */}
+            {current && (
+              <div
+                className="grid grid-cols-1 lg:grid-cols-2 gap-0 overflow-hidden relative"
+                style={{
+                  border: "1px solid rgba(212,175,55,0.35)",
+                  borderRadius: "24px",
+                  background: "#FFFFFF",
+                  boxShadow: "0 20px 60px rgba(212,175,55,0.15), 0 10px 30px rgba(0,0,0,0.05)",
+                }}
+              >
+                {/* Gold Flare Corner Accent */}
                 <div
-                  key={item.id}
-                  className="group flex items-center justify-between gap-4 transition-all duration-150"
+                  className="absolute top-0 right-0 w-48 h-48 pointer-events-none"
                   style={{
-                    padding: "18px 0",
-                    borderBottom:
-                      idx < current.services.length - 1
-                        ? "1px solid rgba(255,255,255,0.07)"
-                        : "none",
+                    background: "radial-gradient(circle, rgba(212,175,55,0.25) 0%, transparent 70%)",
+                    filter: "blur(30px)",
+                  }}
+                />
+
+                {/* LEFT — Service List */}
+                <div
+                  className="flex flex-col justify-between relative z-10"
+                  style={{
+                    padding: "44px 48px",
+                    borderRight: "1px solid rgba(0,0,0,0.08)",
                   }}
                 >
-                  {/* name + duration */}
-                  <div className="min-w-0">
-                    <p
-                      className="font-semibold text-white text-sm leading-snug"
-                      style={{ letterSpacing: "0.01em" }}
+                  {/* heading */}
+                  <div className="mb-8 space-y-1">
+                    <h3
+                      className="font-sans font-extrabold text-[#111111] uppercase leading-snug"
+                      style={{ fontSize: "clamp(1.35rem, 2.2vw, 1.75rem)" }}
                     >
-                      {item.name}
-                    </p>
+                      {current.headline}
+                    </h3>
                     <p
-                      className="text-[11px] mt-0.5"
-                      style={{ color: "rgba(255,255,255,0.35)" }}
+                      className="text-xs text-slate-600 font-normal leading-relaxed"
                     >
-                      {item.duration}
+                      {current.subline}
                     </p>
                   </div>
 
-                  {/* price + book */}
-                  <div className="flex items-center gap-5 flex-shrink-0">
-                    <span
-                      className="font-bold font-mono text-base"
-                      style={{ color: "#D4AF37" }}
-                    >
-                      {item.price}
-                    </span>
+                  {/* service rows */}
+                  <div
+                    className="flex-1"
+                    style={{
+                      borderTop: "1px solid rgba(0,0,0,0.08)",
+                    }}
+                  >
+                    {current.services.map((item, idx) => (
+                      <div
+                        key={item.id}
+                        className="group flex items-center justify-between gap-4 transition-all duration-200 hover:bg-[#FAF8F2] px-3 -mx-3 rounded-xl"
+                        style={{
+                          paddingTop: "16px",
+                          paddingBottom: "16px",
+                          borderBottom:
+                            idx < current.services.length - 1
+                              ? "1px solid rgba(0,0,0,0.06)"
+                              : "none",
+                        }}
+                      >
+                        {/* name + duration + discount badge */}
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center space-x-2">
+                            <p
+                              className="font-bold text-[#111111] text-sm leading-snug group-hover:text-[#996515] transition-colors"
+                            >
+                              {item.name}
+                            </p>
+
+                            {item.discount && item.discount > 0 ? (
+                              <span className="bg-[#111111] text-[#D4AF37] text-[9px] font-extrabold px-2 py-0.5 rounded-full uppercase tracking-wider border border-[#D4AF37]/40 shadow-sm">
+                                {item.discount}% OFF
+                              </span>
+                            ) : null}
+                          </div>
+                        </div>
+
+                        {/* price + book */}
+                        <div className="flex items-center gap-5 flex-shrink-0">
+                          <div className="text-right">
+                            <span
+                              className="font-bold font-mono text-base block text-[#996515]"
+                            >
+                              {item.price}
+                            </span>
+                            {item.originalPrice ? (
+                              <span className="font-mono text-[11px] text-slate-400 line-through block">
+                                {item.originalPrice}
+                              </span>
+                            ) : null}
+                          </div>
+
+                          <button
+                            onClick={() => onOpenBooking(item.name)}
+                            className="cursor-pointer transition-all duration-200"
+                            style={{
+                              padding: "8px 20px",
+                              fontSize: "10px",
+                              fontWeight: 700,
+                              letterSpacing: "0.15em",
+                              textTransform: "uppercase",
+                              border: "1.5px solid #111111",
+                              borderRadius: "6px",
+                              background: "#111111",
+                              color: "#FFFFFF",
+                              boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+                            }}
+                            onMouseEnter={(e) => {
+                              e.currentTarget.style.background = "#D4AF37";
+                              e.currentTarget.style.borderColor = "#D4AF37";
+                              e.currentTarget.style.color = "#111111";
+                              e.currentTarget.style.boxShadow = "0 4px 12px rgba(212,175,55,0.4)";
+                            }}
+                            onMouseLeave={(e) => {
+                              e.currentTarget.style.background = "#111111";
+                              e.currentTarget.style.borderColor = "#111111";
+                              e.currentTarget.style.color = "#FFFFFF";
+                              e.currentTarget.style.boxShadow = "0 2px 8px rgba(0,0,0,0.1)";
+                            }}
+                          >
+                            Book
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* CTA */}
+                  <div className="mt-8 pt-6" style={{ borderTop: "1px solid rgba(0,0,0,0.08)" }}>
                     <button
-                      onClick={() => onOpenBooking(item.name)}
-                      className="cursor-pointer transition-all duration-200"
+                      onClick={() => onOpenBooking()}
+                      className="w-full cursor-pointer font-bold uppercase tracking-widest transition-all duration-300"
                       style={{
-                        padding: "7px 18px",
-                        fontSize: "10px",
-                        fontWeight: 700,
-                        letterSpacing: "0.15em",
-                        textTransform: "uppercase",
-                        border: "1px solid rgba(255,255,255,0.18)",
-                        borderRadius: "3px",
-                        background: "transparent",
-                        color: "rgba(255,255,255,0.6)",
+                        padding: "16px 0",
+                        fontSize: "11px",
+                        borderRadius: "8px",
+                        background: "#111111",
+                        color: "#FFFFFF",
+                        border: "2px solid #111111",
+                        boxShadow: "0 10px 25px rgba(0,0,0,0.15)",
                       }}
                       onMouseEnter={(e) => {
                         e.currentTarget.style.background = "#D4AF37";
                         e.currentTarget.style.borderColor = "#D4AF37";
                         e.currentTarget.style.color = "#111111";
+                        e.currentTarget.style.boxShadow = "0 10px 30px rgba(212,175,55,0.35)";
                       }}
                       onMouseLeave={(e) => {
-                        e.currentTarget.style.background = "transparent";
-                        e.currentTarget.style.borderColor =
-                          "rgba(255,255,255,0.18)";
-                        e.currentTarget.style.color = "rgba(255,255,255,0.6)";
+                        e.currentTarget.style.background = "#111111";
+                        e.currentTarget.style.borderColor = "#111111";
+                        e.currentTarget.style.color = "#FFFFFF";
+                        e.currentTarget.style.boxShadow = "0 10px 25px rgba(0,0,0,0.15)";
                       }}
                     >
-                      Book
+                      Book a Consultation
                     </button>
                   </div>
                 </div>
-              ))}
-            </div>
 
-            {/* CTA */}
-            <div className="mt-8 pt-6" style={{ borderTop: "1px solid rgba(255,255,255,0.08)" }}>
-              <button
-                onClick={() => onOpenBooking()}
-                className="w-full cursor-pointer font-bold uppercase tracking-widest transition-all duration-200"
-                style={{
-                  padding: "15px 0",
-                  fontSize: "11px",
-                  borderRadius: "4px",
-                  background: "#D4AF37",
-                  color: "#111111",
-                  border: "2px solid #D4AF37",
-                  boxShadow: "0 8px 24px rgba(212,175,55,0.20)",
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.background = "transparent";
-                  e.currentTarget.style.color = "#D4AF37";
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.background = "#D4AF37";
-                  e.currentTarget.style.color = "#111111";
-                }}
-              >
-                Book a Consultation
-              </button>
-            </div>
-          </div>
+                {/* RIGHT — Category Hero Image & Gold Frame */}
+                <div className="relative min-h-[400px] lg:min-h-[580px] overflow-hidden bg-[#F8F8F6]">
+                  <Image
+                    key={current.id}
+                    src={current.image}
+                    alt={current.headline}
+                    fill
+                    priority
+                    className="object-cover transition-transform duration-700 hover:scale-105"
+                  />
+                  <div
+                    className="absolute inset-0 pointer-events-none"
+                    style={{
+                      background:
+                        "linear-gradient(90deg, rgba(255,255,255,0.3) 0%, transparent 40%)",
+                    }}
+                  />
 
-          {/* RIGHT — Category Hero Image */}
-          <div className="relative min-h-[400px] lg:min-h-[580px] overflow-hidden">
-            <Image
-              key={current.id}
-              src={current.image}
-              alt={current.headline}
-              fill
-              priority
-              className="object-cover transition-transform duration-700 hover:scale-105"
-            />
-            {/* dark left-side fade for blending */}
-            <div
-              className="absolute inset-0 pointer-events-none"
-              style={{
-                background:
-                  "linear-gradient(90deg, rgba(17,17,19,0.65) 0%, transparent 45%)",
-              }}
-            />
-            {/* bottom overlay with gold accent bar */}
-            <div
-              className="absolute bottom-0 left-0 right-0 p-8"
-              style={{
-                background:
-                  "linear-gradient(to top, rgba(10,10,11,0.85) 0%, transparent 100%)",
-              }}
-            >
-              <div
-                className="w-10 h-[2px] mb-3"
-                style={{ backgroundColor: "#D4AF37" }}
-              />
-              <p
-                className="font-extrabold text-white"
-                style={{ fontSize: "1.15rem", letterSpacing: "0.02em" }}
-              >
-                {current.headline}
-              </p>
-              <p
-                className="text-[12px] mt-1"
-                style={{ color: "rgba(255,255,255,0.50)" }}
-              >
-                {current.services.length} signature treatments
-              </p>
-            </div>
-          </div>
-        </div>
+                  {/* Gold Glowing Card Overlay */}
+                  <div
+                    className="absolute bottom-8 left-8 right-8 p-6 rounded-2xl border border-[#D4AF37]/40 backdrop-blur-md bg-white/90 text-[#111111] space-y-2 shadow-xl"
+                  >
+                    <div className="flex items-center space-x-2">
+                      <span className="w-2.5 h-2.5 rounded-full bg-[#D4AF37] animate-pulse" />
+                      <span className="text-[10px] uppercase font-bold tracking-widest text-[#996515]">
+                        Signature Treatment
+                      </span>
+                    </div>
+                    <h4 className="font-sans text-xl font-bold uppercase text-[#111111]">
+                      {current.headline}
+                    </h4>
+                    <p className="text-xs text-slate-600 font-normal">
+                      Reserve your session with senior artists & hydrafacial experts.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+          </>
+        )}
 
-        {/* ── How It Works ─────────────────────────────────────── */}
-        <div className="mt-20">
-          {/* heading row */}
-          <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-6 mb-12">
-            <div className="space-y-2">
+        {/* ── Workflow Steps Sub-section ────────────────────────── */}
+        <div className="mt-32">
+          <div className="flex flex-col md:flex-row md:items-end justify-between mb-16 gap-6">
+            <div className="space-y-3">
               <p
-                className="text-[11px] font-semibold uppercase tracking-[0.3em]"
-                style={{ color: "#D4AF37" }}
+                className="text-[11px] font-bold uppercase tracking-[0.3em] text-[#996515]"
               >
-                How It Works
+                HOW IT WORKS
               </p>
               <h3
-                className="font-sans font-extrabold text-white leading-tight"
-                style={{ fontSize: "clamp(1.5rem, 3vw, 2.25rem)" }}
+                className="font-sans font-extrabold text-[#111111] leading-tight uppercase"
+                style={{ fontSize: "clamp(1.75rem, 3vw, 2.5rem)" }}
               >
-                Your journey to beauty —{" "}
-                <span style={{ color: "#D4AF37" }}>four simple steps.</span>
+                YOUR LUXURY JOURNEY IN 4 SIMPLE STEPS
               </h3>
+              <div
+                className="w-16 h-[3px] rounded-full bg-[#D4AF37]"
+              />
             </div>
+
             <button
               onClick={() => onOpenBooking()}
-              className="cursor-pointer self-start sm:self-auto font-bold uppercase tracking-widest transition-all duration-200 flex-shrink-0"
+              className="self-start md:self-auto cursor-pointer text-xs font-bold uppercase tracking-widest transition-all duration-300"
               style={{
-                padding: "13px 32px",
-                fontSize: "11px",
-                borderRadius: "4px",
-                background: "transparent",
-                color: "#D4AF37",
-                border: "1.5px solid rgba(212,175,55,0.5)",
+                padding: "14px 28px",
+                borderRadius: "6px",
+                border: "2px solid #111111",
+                color: "#FFFFFF",
+                background: "#111111",
+                boxShadow: "0 4px 14px rgba(0,0,0,0.1)",
               }}
               onMouseEnter={(e) => {
                 e.currentTarget.style.background = "#D4AF37";
                 e.currentTarget.style.color = "#111111";
                 e.currentTarget.style.borderColor = "#D4AF37";
+                e.currentTarget.style.boxShadow = "0 6px 20px rgba(212,175,55,0.3)";
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.background = "transparent";
-                e.currentTarget.style.color = "#D4AF37";
-                e.currentTarget.style.borderColor = "rgba(212,175,55,0.5)";
+                e.currentTarget.style.background = "#111111";
+                e.currentTarget.style.color = "#FFFFFF";
+                e.currentTarget.style.borderColor = "#111111";
+                e.currentTarget.style.boxShadow = "0 4px 14px rgba(0,0,0,0.1)";
               }}
             >
               Get a Consultation
@@ -471,71 +535,41 @@ export default function ServiceAndWorkflowSection({
           </div>
 
           {/* steps grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {workflowSteps.map((step, idx) => (
               <div
                 key={step.num}
-                className="relative group transition-all duration-200"
-                style={{
-                  padding: "32px 28px",
-                  background: "#111113",
-                  border: "1px solid rgba(255,255,255,0.08)",
-                  borderRadius: "12px",
-                  overflow: "hidden",
-                }}
-                onMouseEnter={(e) => {
-                  (e.currentTarget as HTMLDivElement).style.borderColor =
-                    "rgba(212,175,55,0.4)";
-                  (e.currentTarget as HTMLDivElement).style.boxShadow =
-                    "0 0 30px rgba(212,175,55,0.08)";
-                }}
-                onMouseLeave={(e) => {
-                  (e.currentTarget as HTMLDivElement).style.borderColor =
-                    "rgba(255,255,255,0.08)";
-                  (e.currentTarget as HTMLDivElement).style.boxShadow = "none";
-                }}
+                className="relative group transition-all duration-300 bg-white p-8 rounded-2xl border border-slate-200 shadow-sm hover:border-[#D4AF37] hover:shadow-xl"
               >
-                {/* connector line (not on last) */}
                 {idx < workflowSteps.length - 1 && (
                   <div
                     className="hidden lg:block absolute top-[52px] right-0 w-4 h-px"
                     style={{
                       background:
-                        "linear-gradient(90deg, rgba(212,175,55,0.3), transparent)",
+                        "linear-gradient(90deg, rgba(212,175,55,0.5), transparent)",
                       transform: "translateX(100%)",
                       zIndex: 1,
                     }}
                   />
                 )}
 
-                {/* step number */}
-                <div
-                  className="font-bold font-mono mb-5"
-                  style={{
-                    fontSize: "2rem",
-                    color: "rgba(212,175,55,0.18)",
-                    lineHeight: 1,
-                    letterSpacing: "-0.03em",
-                  }}
-                >
-                  {step.num}
+                <div className="flex items-center justify-between mb-6">
+                  <span
+                    className="font-mono font-extrabold text-3xl text-[#996515]"
+                  >
+                    {step.num}
+                  </span>
+                  <div
+                    className="w-2 h-2 rounded-full bg-[#D4AF37]"
+                  />
                 </div>
 
-                {/* gold accent */}
-                <div
-                  className="w-7 h-[2px] mb-4"
-                  style={{ backgroundColor: "#D4AF37", opacity: 0.6 }}
-                />
-
-                <h4
-                  className="font-sans font-bold text-white mb-2"
-                  style={{ fontSize: "0.95rem" }}
-                >
+                <h4 className="font-sans font-bold text-[#111111] text-base mb-2 uppercase">
                   {step.title}
                 </h4>
+
                 <p
-                  className="text-[12px] leading-relaxed"
-                  style={{ color: "rgba(255,255,255,0.40)" }}
+                  className="text-xs font-normal leading-relaxed text-slate-600"
                 >
                   {step.desc}
                 </p>

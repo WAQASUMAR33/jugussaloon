@@ -115,7 +115,7 @@ export default function OurWorkPage() {
         </div>
       </section>
 
-      {/* Press & Reviews Component */}
+      {/* Google 5-Star Reviews & Client Testimonials */}
       <NewsPress />
 
       <Footer onOpenBooking={() => handleOpenBooking()} />

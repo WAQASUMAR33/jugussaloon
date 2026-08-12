@@ -4,12 +4,16 @@ import { useState } from "react";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import BookingModal from "../components/BookingModal";
-import ServiceMatrix from "../components/ServiceMatrix";
+import NewsPress from "../components/NewsPress";
+import LocationMap from "../components/LocationMap";
 import Image from "next/image";
+import { submitContact } from "../lib/api";
 
 export default function ContactPage() {
   const [bookingOpen, setBookingOpen] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [apiMessage, setApiMessage] = useState("");
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -18,8 +22,22 @@ export default function ContactPage() {
     message: "",
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsSubmitting(true);
+    
+    const res = await submitContact({
+      name: formData.name,
+      email: formData.email,
+      phone: formData.phone || "03009876543",
+      subject: formData.subject,
+      message: formData.message,
+    });
+    
+    setIsSubmitting(false);
+    if (res.success && res.message) {
+      setApiMessage(res.message);
+    }
     setSubmitted(true);
   };
 
@@ -156,9 +174,10 @@ export default function ContactPage() {
 
                   <button
                     type="submit"
-                    className="w-full py-4 rounded-full bg-[#111111] text-white font-bold text-xs uppercase tracking-widest hover:bg-[#D4AF37] hover:text-black transition-all cursor-pointer shadow-md"
+                    disabled={isSubmitting}
+                    className="w-full py-4 rounded-full bg-[#111111] text-white font-bold text-xs uppercase tracking-widest hover:bg-[#D4AF37] hover:text-black transition-all cursor-pointer shadow-md disabled:opacity-50"
                   >
-                    Send Message
+                    {isSubmitting ? "Sending Message..." : "Send Message"}
                   </button>
                 </form>
               )}
@@ -261,8 +280,11 @@ export default function ContactPage() {
         </div>
       </section>
 
-      {/* Salon Services & Pricing Matrix */}
-      <ServiceMatrix onOpenBooking={() => setBookingOpen(true)} />
+      {/* Google 5-Star Reviews & Testimonials Section */}
+      <NewsPress />
+
+      {/* Saloon Location & Interactive Google Map Section */}
+      <LocationMap />
 
       <Footer onOpenBooking={() => setBookingOpen(true)} />
 

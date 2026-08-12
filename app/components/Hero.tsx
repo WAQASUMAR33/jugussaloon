@@ -1,178 +1,187 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Image from "next/image";
 
 interface HeroProps {
   onOpenBooking: () => void;
 }
 
+const slides = [
+  {
+    id: 1,
+    titleLine1: "WHERE BEAUTY",
+    titleLine2: "MEETS ARTISTRY",
+    desc: "Premium bridal makeovers, signature hair transformations & 24K gold hydrafacials crafted with world-class artistry.",
+    image: "/images/hero_salon.png",
+    alt: "Jugnu's Saloon luxury interior",
+  },
+  {
+    id: 2,
+    titleLine1: "ROYAL BRIDAL",
+    titleLine2: "TRANSFORMATIONS",
+    desc: "Step into your dream bridal look with airbrush precision, glowing complexion sculpting, and traditional draping excellence.",
+    image: "/images/bridal_makeup.png",
+    alt: "Royal HD Airbrush Bridal Makeup",
+  },
+  {
+    id: 3,
+    titleLine1: "ORGANIC SPA &",
+    titleLine2: "FACIAL RADIANCE",
+    desc: "Rejuvenate your skin with our signature 24K gold cellular facial rituals, scalp treatments, and organic hair masks.",
+    image: "/images/beauty_facial.png",
+    alt: "24K Gold Hydrafacial & Skin Spa",
+  },
+];
+
 export default function Hero({ onOpenBooking }: HeroProps) {
+  const [currentSlide, setCurrentSlide] = useState(0);
+
+  // Automatic slide transition every 5 seconds
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentSlide((prev) => (prev + 1) % slides.length);
+    }, 5000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const slide = slides[currentSlide];
+
   return (
     <section
       id="hero"
-      className="relative min-h-screen flex items-center overflow-hidden"
+      className="relative min-h-screen flex items-center overflow-hidden bg-[#0A0A0B] text-white"
     >
-      {/* ── Full-bleed background image ── */}
-      <div className="absolute inset-0 z-0">
-        <Image
-          src="/images/hero_salon.png"
-          alt="Jugnu's Saloon luxury interior"
-          fill
-          priority
-          className="object-cover object-center"
-        />
-        {/* Clean dual-tone overlay: strong left fade for text, gentle right */}
+      {/* ── Background Carousel Images ── */}
+      {slides.map((s, index) => (
         <div
-          className="absolute inset-0"
-          style={{
-            background:
-              "linear-gradient(105deg, rgba(10,10,10,0.82) 0%, rgba(10,10,10,0.60) 45%, rgba(10,10,10,0.28) 100%)",
-          }}
-        />
-        {/* Subtle gold warmth bloom — left side */}
-        <div
-          className="absolute inset-0 pointer-events-none"
-          style={{
-            background:
-              "radial-gradient(ellipse 60% 80% at 15% 60%, rgba(212,175,55,0.08) 0%, transparent 70%)",
-          }}
-        />
-      </div>
+          key={s.id}
+          className={`absolute inset-0 z-0 transition-opacity duration-1000 ease-in-out ${
+            index === currentSlide ? "opacity-100 scale-100" : "opacity-0 scale-105 pointer-events-none"
+          }`}
+          style={{ transitionProperty: "opacity, transform" }}
+        >
+          <Image
+            src={s.image}
+            alt={s.alt}
+            fill
+            priority={index === 0}
+            className="object-cover object-center"
+          />
 
-      {/* ── Content ── */}
-      <div className="max-w-[1480px] mx-auto px-6 sm:px-10 lg:px-16 w-full relative z-10">
-        <div className="min-h-screen flex flex-col justify-center py-36 max-w-2xl">
+          {/* Heavy Dark Left Gradient: Prevents text-image collision */}
+          <div
+            className="absolute inset-0"
+            style={{
+              background:
+                "linear-gradient(90deg, rgba(10,10,11,0.92) 0%, rgba(10,10,11,0.75) 45%, rgba(10,10,11,0.40) 80%, rgba(10,10,11,0.25) 100%)",
+            }}
+          />
 
+          {/* Top & Bottom Shading */}
+          <div
+            className="absolute inset-0"
+            style={{
+              background:
+                "linear-gradient(180deg, rgba(10,10,11,0.60) 0%, transparent 25%, transparent 75%, rgba(10,10,11,0.80) 100%)",
+            }}
+          />
 
-          {/* Headline */}
+          {/* Golden Ambient Glare Accent */}
+          <div
+            className="absolute -top-24 left-1/4 w-96 h-96 rounded-full pointer-events-none opacity-30"
+            style={{
+              background: "radial-gradient(circle, rgba(212,175,55,0.3) 0%, transparent 70%)",
+              filter: "blur(60px)",
+            }}
+          />
+        </div>
+      ))}
+
+      {/* ── Foreground Content ── */}
+      <div className="max-w-[1480px] mx-auto px-6 sm:px-10 lg:px-16 w-full relative z-10 pt-28 pb-20">
+        <div className="max-w-2xl space-y-6">
+
+          {/* Main Headline */}
           <h1
-            className="font-sans font-extrabold leading-[1.06] text-white mb-6"
-            style={{ fontSize: "clamp(2.8rem, 5.5vw, 5rem)" }}
+            className="font-sans font-extrabold leading-[1.08] text-white uppercase tracking-tight"
+            style={{ fontSize: "clamp(2.5rem, 5vw, 4.75rem)" }}
           >
-            Where Beauty
+            {slide.titleLine1}
             <br />
-            <span style={{ color: "#D4AF37" }}>Meets Artistry</span>
+            <span className="text-[#D4AF37] drop-shadow-md">{slide.titleLine2}</span>
           </h1>
 
-
-          {/* Body copy */}
-          <p
-            className="text-base sm:text-[17px] leading-relaxed font-normal mb-10 max-w-md font-georgia"
-            style={{ color: "rgba(255,255,255,0.75)" }}
-          >
-            Premium bridal makeovers, hair artistry, 24K gold facials &amp; more, all crafted for you with the finest touch of luxury.
+          {/* Subtitle */}
+          <p className="text-slate-300 text-base sm:text-lg leading-relaxed font-normal max-w-lg">
+            {slide.desc}
           </p>
 
-          {/* CTA row */}
-          <div className="flex flex-wrap items-center gap-5 mb-14">
-            {/* Primary: Book */}
+          {/* CTA Action Buttons */}
+          <div className="flex flex-wrap items-center gap-4 pt-2">
             <button
               onClick={onOpenBooking}
-              className="cursor-pointer"
-              style={{
-                backgroundColor: "#D4AF37",
-                color: "#111111",
-                padding: "15px 36px",
-                borderRadius: "3px",
-                fontSize: "11px",
-                fontWeight: 700,
-                letterSpacing: "0.20em",
-                textTransform: "uppercase",
-                border: "2px solid #D4AF37",
-                transition: "all 0.25s ease",
-              }}
-              onMouseEnter={(e) => {
-                const el = e.currentTarget;
-                el.style.backgroundColor = "transparent";
-                el.style.color = "#D4AF37";
-              }}
-              onMouseLeave={(e) => {
-                const el = e.currentTarget;
-                el.style.backgroundColor = "#D4AF37";
-                el.style.color = "#111111";
-              }}
+              className="px-8 py-4 rounded-xl bg-[#D4AF37] text-black font-extrabold text-xs uppercase tracking-widest hover:bg-white transition-all duration-300 cursor-pointer shadow-lg shadow-[#D4AF37]/20 border-2 border-[#D4AF37]"
             >
-              Book Now
+              Book Appointment
             </button>
 
-            {/* Secondary: Call */}
             <a
               href="tel:03194415757"
-              className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.20em] transition-colors"
-              style={{ color: "rgba(255,255,255,0.80)", textDecoration: "none" }}
-              onMouseEnter={(e) => (e.currentTarget.style.color = "#D4AF37")}
-              onMouseLeave={(e) =>
-                (e.currentTarget.style.color = "rgba(255,255,255,0.80)")
-              }
+              className="px-7 py-4 rounded-xl bg-black/50 border border-white/20 text-white font-bold text-xs uppercase tracking-widest hover:border-[#D4AF37] hover:text-[#D4AF37] hover:bg-black/70 transition-all flex items-center gap-2 backdrop-blur-sm"
             >
               <svg
-                width="15"
-                height="15"
-                viewBox="0 0 24 24"
+                className="w-4 h-4 text-[#D4AF37]"
                 fill="none"
                 stroke="currentColor"
                 strokeWidth={2}
-                strokeLinecap="round"
-                strokeLinejoin="round"
+                viewBox="0 0 24 24"
               >
-                <path d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"
+                />
               </svg>
-              0319 4415757
+              <span>0319 4415757</span>
             </a>
           </div>
 
-          {/* Stats row */}
-          <div
-            className="flex items-center gap-8 pt-6"
-            style={{ borderTop: "1px solid rgba(255,255,255,0.14)" }}
-          >
+          {/* Stats Bar */}
+          <div className="pt-10 border-t border-white/15 flex items-center space-x-8">
             <div>
               <p className="text-2xl font-extrabold text-white">30K+</p>
-              <p
-                className="text-[11px] uppercase tracking-widest font-medium mt-0.5"
-                style={{ color: "rgba(255,255,255,0.50)" }}
-              >
+              <p className="text-[10px] uppercase tracking-widest text-slate-400 font-bold mt-0.5">
                 Happy Clients
               </p>
             </div>
-            <div
-              className="w-px h-10"
-              style={{ backgroundColor: "rgba(255,255,255,0.15)" }}
-            />
+            <div className="w-px h-8 bg-white/20" />
             <div>
               <p className="text-2xl font-extrabold text-white">5.0 ★</p>
-              <p
-                className="text-[11px] uppercase tracking-widest font-medium mt-0.5"
-                style={{ color: "rgba(255,255,255,0.50)" }}
-              >
-                Rated Excellence
-              </p>
-            </div>
-            <div
-              className="w-px h-10"
-              style={{ backgroundColor: "rgba(255,255,255,0.15)" }}
-            />
-            <div>
-              <p className="text-2xl font-extrabold text-white">15+</p>
-              <p
-                className="text-[11px] uppercase tracking-widest font-medium mt-0.5"
-                style={{ color: "rgba(255,255,255,0.50)" }}
-              >
-                Years of Craft
+              <p className="text-[10px] uppercase tracking-widest text-slate-400 font-bold mt-0.5">
+                Google Rating
               </p>
             </div>
           </div>
+
         </div>
       </div>
 
-      {/* Bottom fade into page */}
-      <div
-        className="absolute bottom-0 left-0 right-0 h-32 pointer-events-none z-10"
-        style={{
-          background:
-            "linear-gradient(to top, #FAFAFA 0%, transparent 100%)",
-        }}
-      />
+      {/* ── Slide Representing Three Dots at Exact Bottom Center ── */}
+      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-20 flex items-center space-x-3 bg-black/60 backdrop-blur-md px-5 py-2.5 rounded-full border border-white/20 shadow-xl">
+        {slides.map((_, idx) => (
+          <button
+            key={idx}
+            onClick={() => setCurrentSlide(idx)}
+            className={`transition-all duration-500 cursor-pointer ${
+              idx === currentSlide
+                ? "w-8 h-2.5 bg-[#D4AF37] rounded-full shadow-md shadow-[#D4AF37]/30"
+                : "w-2.5 h-2.5 bg-white/40 hover:bg-white/80 rounded-full"
+            }`}
+            aria-label={`Go to slide ${idx + 1}`}
+          />
+        ))}
+      </div>
     </section>
   );
 }

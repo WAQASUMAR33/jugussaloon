@@ -3,7 +3,6 @@
 import { useState } from "react";
 import Navbar from "../components/Navbar";
 import AboutSection from "../components/AboutSection";
-import Stylists from "../components/Stylists";
 import WhyChooseUs from "../components/WhyChooseUs";
 import LocationMap from "../components/LocationMap";
 import Footer from "../components/Footer";
@@ -48,9 +47,6 @@ export default function AboutPage() {
 
       {/* Why Choose Us */}
       <WhyChooseUs onOpenBooking={handleOpenBooking} />
-
-      {/* Meet Our Artists */}
-      <Stylists onOpenBooking={handleOpenBooking} />
 
       {/* Saloon Location & Google Map */}
       <LocationMap />
