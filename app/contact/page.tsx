@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import BookingModal from "../components/BookingModal";
@@ -8,12 +8,15 @@ import NewsPress from "../components/NewsPress";
 import LocationMap from "../components/LocationMap";
 import Image from "next/image";
 import { submitContact } from "../lib/api";
+import { useAuth } from "../context/AuthContext";
 
 export default function ContactPage() {
+  const { customer } = useAuth();
   const [bookingOpen, setBookingOpen] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [apiMessage, setApiMessage] = useState("");
+  const [apiError, setApiError] = useState("");
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -22,23 +25,47 @@ export default function ContactPage() {
     message: "",
   });
 
+  // Autofill name and phone if logged in
+  useEffect(() => {
+    if (customer) {
+      setFormData((prev) => ({
+        ...prev,
+        name: prev.name || customer.name || "",
+        phone: prev.phone || customer.phone_no1 || "",
+      }));
+    }
+  }, [customer]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsSubmitting(true);
-    
-    const res = await submitContact({
-      name: formData.name,
-      email: formData.email,
-      phone: formData.phone || "03009876543",
-      subject: formData.subject,
-      message: formData.message,
-    });
-    
-    setIsSubmitting(false);
-    if (res.success && res.message) {
-      setApiMessage(res.message);
+    if (!formData.name.trim() || !formData.email.trim() || !formData.message.trim()) {
+      setApiError("Please provide your name, email, and message.");
+      return;
     }
-    setSubmitted(true);
+
+    setIsSubmitting(true);
+    setApiError("");
+    
+    try {
+      const res = await submitContact({
+        name: formData.name.trim(),
+        email: formData.email.trim(),
+        phone: formData.phone.trim() || undefined,
+        subject: formData.subject,
+        message: formData.message.trim(),
+      });
+      
+      setIsSubmitting(false);
+      if (res.success) {
+        setApiMessage(res.message || "Thank you for reaching out! Your message has been received.");
+        setSubmitted(true);
+      } else {
+        setApiError(res.error || res.message || "Failed to send message. Please try again.");
+      }
+    } catch (err: any) {
+      setIsSubmitting(false);
+      setApiError(err?.message || "An unexpected error occurred. Please try again.");
+    }
   };
 
   return (
@@ -46,8 +73,8 @@ export default function ContactPage() {
       <Navbar onOpenBooking={() => setBookingOpen(true)} />
 
       {/* Hero Header Banner */}
-      <section className="relative pt-32 pb-20 bg-[#111111] text-white overflow-hidden">
-        <div className="absolute inset-0 z-0 opacity-40">
+      <section className="relative pt-36 pb-24 bg-[#111111] text-white overflow-hidden">
+        <div className="absolute inset-0 z-0 opacity-30">
           <Image
             src="/images/hero_salon.png"
             alt="Contact Jugnu's Saloon"
@@ -55,100 +82,116 @@ export default function ContactPage() {
             className="object-cover"
           />
         </div>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center space-y-4">
+        <div className="max-w-[1480px] mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center space-y-4">
           <h1 className="font-sans text-4xl sm:text-6xl font-extrabold uppercase tracking-tight">
             GET IN TOUCH WITH US
           </h1>
-          <p className="text-slate-300 text-base sm:text-lg max-w-2xl mx-auto font-normal">
-            Have questions about our bridal packages, hydrafacials, or appointments? We are here to help.
+          <div className="w-16 h-1 bg-[#D4AF37] mx-auto rounded-full" />
+          <p className="text-slate-300 text-base sm:text-lg max-w-2xl mx-auto font-normal leading-relaxed">
+            Have questions about our bridal packages, hydrafacials, or appointments? Our beauty concierges are here to assist you.
           </p>
         </div>
       </section>
 
       {/* Contact Form & Info Grid */}
       <section className="py-20 bg-[#FFFFFF]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-[1480px] mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
             {/* Contact Form */}
-            <div className="lg:col-span-7 bg-[#F8F8F6] p-8 sm:p-10 rounded-3xl border border-slate-200 shadow-sm">
-              <h2 className="font-sans text-2xl font-extrabold text-[#111111] uppercase mb-2">
+            <div className="lg:col-span-7 bg-[#F8F8F6] p-8 sm:p-12 rounded-3xl border border-slate-200 shadow-sm">
+              <h2 className="font-sans text-2xl sm:text-3xl font-extrabold text-[#111111] uppercase mb-2">
                 SEND US A MESSAGE
               </h2>
+              <div className="w-12 h-1 bg-[#D4AF37] mb-4 rounded-full" />
               <p className="text-xs text-slate-600 font-normal mb-8">
                 Fill out the form below and our salon concierge will respond within 2 hours.
               </p>
 
+              {apiError && (
+                <div className="mb-6 p-4 rounded-2xl bg-red-50 border border-red-200 text-red-700 text-xs font-semibold">
+                  ⚠️ {apiError}
+                </div>
+              )}
+
               {submitted ? (
-                <div className="p-6 rounded-2xl bg-white border border-[#D4AF37] text-center space-y-3">
-                  <div className="w-12 h-12 rounded-full bg-[#F5E8C7] text-[#856404] mx-auto flex items-center justify-center font-bold text-xl">
+                <div className="p-8 rounded-3xl bg-white border border-[#D4AF37] text-center space-y-4 shadow-sm">
+                  <div className="w-14 h-14 rounded-full bg-[#F5E8C7] text-[#856404] mx-auto flex items-center justify-center font-bold text-2xl">
                     ✓
                   </div>
-                  <h3 className="font-sans text-xl font-bold">MESSAGE RECEIVED!</h3>
-                  <p className="text-xs text-slate-600 font-normal">
-                    Thank you, {formData.name}. Our concierge team will reach out to you shortly.
+                  <h3 className="font-sans text-xl font-bold text-[#111111] uppercase">MESSAGE RECEIVED!</h3>
+                  <p className="text-xs text-slate-600 font-normal max-w-md mx-auto">
+                    {apiMessage || `Thank you, ${formData.name}. Our concierge team will reach out to you shortly.`}
                   </p>
                   <button
-                    onClick={() => setSubmitted(false)}
-                    className="px-6 py-2.5 rounded-full bg-[#111111] text-white text-xs font-bold uppercase tracking-wider"
+                    onClick={() => {
+                      setSubmitted(false);
+                      setFormData({
+                        name: customer?.name || "",
+                        email: "",
+                        phone: customer?.phone_no1 || "",
+                        subject: "Bridal & Beauty Inquiry",
+                        message: "",
+                      });
+                    }}
+                    className="px-8 py-3 rounded-full bg-[#111111] text-white text-xs font-bold uppercase tracking-wider hover:bg-[#D4AF37] hover:text-black transition-all cursor-pointer shadow-md"
                   >
                     Send Another Message
                   </button>
                 </div>
               ) : (
-                <form onSubmit={handleSubmit} className="space-y-4">
+                <form onSubmit={handleSubmit} className="space-y-5">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-xs uppercase font-bold text-slate-700 mb-1">
-                        Your Name
+                    <div className="space-y-1">
+                      <label className="block text-xs uppercase font-bold text-slate-700">
+                        Your Full Name *
                       </label>
                       <input
                         type="text"
-                        placeholder="Eleanor Vance"
+                        placeholder="e.g. Eleanor Vance"
                         value={formData.name}
                         onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                        className="w-full p-3 rounded-xl bg-white border border-slate-300 text-xs text-[#111111] focus:border-[#D4AF37] focus:outline-none font-medium"
+                        className="w-full p-3.5 rounded-xl bg-white border border-slate-300 text-xs text-[#111111] focus:border-[#D4AF37] focus:outline-none font-medium"
                         required
                       />
                     </div>
 
-                    <div>
-                      <label className="block text-xs uppercase font-bold text-slate-700 mb-1">
-                        Email Address
+                    <div className="space-y-1">
+                      <label className="block text-xs uppercase font-bold text-slate-700">
+                        Email Address *
                       </label>
                       <input
                         type="email"
                         placeholder="client@example.com"
                         value={formData.email}
                         onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                        className="w-full p-3 rounded-xl bg-white border border-slate-300 text-xs text-[#111111] focus:border-[#D4AF37] focus:outline-none font-medium"
+                        className="w-full p-3.5 rounded-xl bg-white border border-slate-300 text-xs text-[#111111] focus:border-[#D4AF37] focus:outline-none font-medium"
                         required
                       />
                     </div>
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-xs uppercase font-bold text-slate-700 mb-1">
-                        Phone Number
+                    <div className="space-y-1">
+                      <label className="block text-xs uppercase font-bold text-slate-700">
+                        Phone Number (WhatsApp)
                       </label>
                       <input
                         type="tel"
-                        placeholder="+1 (555) 000-0000"
+                        placeholder="0300 1234567"
                         value={formData.phone}
                         onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                        className="w-full p-3 rounded-xl bg-white border border-slate-300 text-xs text-[#111111] focus:border-[#D4AF37] focus:outline-none font-medium"
-                        required
+                        className="w-full p-3.5 rounded-xl bg-white border border-slate-300 text-xs text-[#111111] focus:border-[#D4AF37] focus:outline-none font-medium"
                       />
                     </div>
 
-                    <div>
-                      <label className="block text-xs uppercase font-bold text-slate-700 mb-1">
-                        Inquiry Type
+                    <div className="space-y-1">
+                      <label className="block text-xs uppercase font-bold text-slate-700">
+                        Inquiry Subject
                       </label>
                       <select
                         value={formData.subject}
                         onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
-                        className="w-full p-3 rounded-xl bg-white border border-slate-300 text-xs text-[#111111] focus:border-[#D4AF37] focus:outline-none font-medium"
+                        className="w-full p-3.5 rounded-xl bg-white border border-slate-300 text-xs text-[#111111] focus:border-[#D4AF37] focus:outline-none font-medium"
                       >
                         <option value="Bridal & Beauty Inquiry">Bridal & Beauty Inquiry</option>
                         <option value="Hair Styling & Balayage">Hair Styling & Balayage</option>
@@ -158,17 +201,18 @@ export default function ContactPage() {
                     </div>
                   </div>
 
-                  <div>
-                    <label className="block text-xs uppercase font-bold text-slate-700 mb-1">
-                      Message
+                  <div className="space-y-1">
+                    <label className="block text-xs uppercase font-bold text-slate-700">
+                      Your Message *
                     </label>
                     <textarea
                       rows={4}
-                      placeholder="Tell us about your event date or beauty preferences..."
+                      placeholder="Tell us about your requested dates, bridal package preferences, or questions..."
                       value={formData.message}
                       onChange={(e) => setFormData({ ...formData, message: e.target.value })}
-                      className="w-full p-3 rounded-xl bg-white border border-slate-300 text-xs text-[#111111] focus:border-[#D4AF37] focus:outline-none font-medium resize-none"
+                      className="w-full p-3.5 rounded-xl bg-white border border-slate-300 text-xs text-[#111111] focus:border-[#D4AF37] focus:outline-none font-medium resize-none"
                       required
+                      maxLength={2000}
                     />
                   </div>
 
@@ -177,7 +221,7 @@ export default function ContactPage() {
                     disabled={isSubmitting}
                     className="w-full py-4 rounded-full bg-[#111111] text-white font-bold text-xs uppercase tracking-widest hover:bg-[#D4AF37] hover:text-black transition-all cursor-pointer shadow-md disabled:opacity-50"
                   >
-                    {isSubmitting ? "Sending Message..." : "Send Message"}
+                    {isSubmitting ? "Sending Inquiry to Server..." : "Submit Inquiry to Concierge"}
                   </button>
                 </form>
               )}
@@ -185,14 +229,15 @@ export default function ContactPage() {
 
             {/* Direct Info */}
             <div className="lg:col-span-5 space-y-8">
-              <div className="bg-[#FAFAFA] p-8 rounded-3xl border border-slate-200 shadow-sm space-y-6">
+              <div className="bg-[#FAFAFA] p-8 sm:p-10 rounded-3xl border border-slate-200 shadow-sm space-y-6">
                 <h3 className="font-sans text-xl font-extrabold uppercase text-[#111111]">
                   CONTACT INFORMATION
                 </h3>
+                <div className="w-10 h-0.5 bg-[#D4AF37] rounded-full" />
 
-                <div className="space-y-4 text-xs font-normal">
+                <div className="space-y-5 text-xs font-normal">
                   <div className="flex items-start space-x-3">
-                    <div className="w-8 h-8 rounded-full bg-[#F5E8C7] text-[#856404] flex items-center justify-center font-bold shrink-0">
+                    <div className="w-9 h-9 rounded-full bg-[#F5E8C7] text-[#856404] flex items-center justify-center font-bold shrink-0">
                       📍
                     </div>
                     <div>
@@ -210,7 +255,7 @@ export default function ContactPage() {
                   </div>
 
                   <div className="flex items-center space-x-3 pt-2">
-                    <div className="w-8 h-8 rounded-full bg-[#F5E8C7] text-[#856404] flex items-center justify-center font-bold">
+                    <div className="w-9 h-9 rounded-full bg-[#F5E8C7] text-[#856404] flex items-center justify-center font-bold">
                       📞
                     </div>
                     <div>
@@ -222,7 +267,7 @@ export default function ContactPage() {
                   </div>
 
                   <div className="flex items-center space-x-3 pt-2">
-                    <div className="w-8 h-8 rounded-full bg-[#F5E8C7] text-[#856404] flex items-center justify-center font-bold">
+                    <div className="w-9 h-9 rounded-full bg-[#F5E8C7] text-[#856404] flex items-center justify-center font-bold">
                       ✉️
                     </div>
                     <div>
@@ -235,7 +280,7 @@ export default function ContactPage() {
                 </div>
 
                 {/* Social Channels */}
-                <div className="pt-4 border-t border-slate-200 space-y-3">
+                <div className="pt-6 border-t border-slate-200 space-y-3">
                   <p className="font-bold text-xs text-[#111111] uppercase tracking-wider">
                     Follow Jugnu&apos;s Saloon Online
                   </p>

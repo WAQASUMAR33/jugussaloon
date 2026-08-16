@@ -6,11 +6,11 @@ import Hero from "./components/Hero";
 import WhyChooseUs from "./components/WhyChooseUs";
 import ServiceAndWorkflowSection from "./components/ServiceAndWorkflowSection";
 import ProductsShowcase from "./components/ProductsShowcase";
+import WorkShowcase from "./components/WorkShowcase";
 import NewsPress from "./components/NewsPress";
 import LocationMap from "./components/LocationMap";
 import BookingModal from "./components/BookingModal";
 import Footer from "./components/Footer";
-import Link from "next/link";
 
 export default function Home() {
   const [bookingOpen, setBookingOpen] = useState(false);
@@ -40,6 +40,9 @@ export default function Home() {
       {/* Combined Services & How It Works Master Section (Inspiration Design) */}
       <ServiceAndWorkflowSection onOpenBooking={handleOpenBooking} />
 
+      {/* Signature Work & Transformations Showcase (Top 6 Pinterest-Style) */}
+      <WorkShowcase onOpenBooking={handleOpenBooking} />
+
       {/* Products Showcase Section (Home Page) */}
       <ProductsShowcase onOpenBooking={handleOpenBooking} />
 
@@ -49,15 +52,6 @@ export default function Home() {
       {/* Saloon Location & Map Section */}
       <LocationMap />
 
-      {/* View Full Gallery Banner Link */}
-      <div className="bg-[#FAFAFA] py-8 text-center border-t border-slate-200">
-        <Link
-          href="/our-work"
-          className="inline-block px-8 py-3.5 rounded-full bg-[#111111] text-white font-bold text-xs uppercase tracking-widest hover:bg-[#D4AF37] hover:text-black transition-all shadow-md"
-        >
-          Explore Full Transformations & Work &rarr;
-        </Link>
-      </div>
 
       {/* Footer */}
       <Footer onOpenBooking={() => handleOpenBooking()} />

@@ -6,8 +6,11 @@ import Footer from "../components/Footer";
 import Image from "next/image";
 import Link from "next/link";
 import { bookAppointment, getServices, ServiceItem } from "../lib/api";
+import { useAuth } from "../context/AuthContext";
 
 export default function BookingPage() {
+  const { customer, isAuthenticated, openAuthModal } = useAuth();
+
   const [step, setStep] = useState<number>(1);
   const [selectedService, setSelectedService] = useState<string>("");
   const [selectedDate, setSelectedDate] = useState<string>("");
@@ -15,11 +18,21 @@ export default function BookingPage() {
   const [clientName, setClientName] = useState<string>("");
   const [clientPhone, setClientPhone] = useState<string>("");
   const [clientEmail, setClientEmail] = useState<string>("");
+  const [notes, setNotes] = useState<string>("");
+  const [receiptFile, setReceiptFile] = useState<File | null>(null);
   const [bookingRef, setBookingRef] = useState<string>("");
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [apiError, setApiError] = useState<string>("");
   const [liveServices, setLiveServices] = useState<ServiceItem[]>([]);
   const [loadingServices, setLoadingServices] = useState<boolean>(true);
+
+  // Autofill if customer is logged in
+  useEffect(() => {
+    if (customer) {
+      setClientName(customer.name || "");
+      setClientPhone(customer.phone_no1 || "");
+    }
+  }, [customer]);
 
   useEffect(() => {
     async function loadServices() {
@@ -46,8 +59,21 @@ export default function BookingPage() {
 
   const handleConfirmBooking = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // If not authenticated, prompt sign in first
+    if (!isAuthenticated && !customer) {
+      openAuthModal(
+        "Please sign in or register to complete your reservation.",
+        (loggedCustomer) => {
+          setClientName(loggedCustomer.name);
+          setClientPhone(loggedCustomer.phone_no1);
+        }
+      );
+      return;
+    }
+
     if (!clientName.trim() || !clientPhone.trim()) {
-      setApiError("Please enter your name and phone number.");
+      setApiError("Please enter your full name and phone number.");
       return;
     }
 
@@ -70,20 +96,27 @@ export default function BookingPage() {
 
     // Match service ID
     const matchedService = liveServices.find(
-      (s) => String(s.id) === selectedService || s.title.toLowerCase() === selectedService.toLowerCase()
+      (s) =>
+        String(s.id) === selectedService ||
+        s.title.toLowerCase() === selectedService.toLowerCase()
     );
 
-    const serviceIdNum = matchedService ? matchedService.id : (parseInt(selectedService, 10) || 1);
+    const serviceIdNum = matchedService
+      ? matchedService.id
+      : parseInt(selectedService, 10) || 1;
     const serviceTitle = matchedService ? matchedService.title : selectedService;
 
     const payload = {
       customer_name: clientName.trim(),
       customer_phone: clientPhone.trim(),
-      customer_email: clientEmail.trim() || "client@jugnussaloon.com",
+      customer_email: clientEmail.trim() || undefined,
       appointment_date: selectedDate || new Date().toISOString().split("T")[0],
       start_time: formattedTime,
       service_ids: [serviceIdNum],
-      notes: `Service Reserved: ${serviceTitle}`,
+      notes: notes.trim()
+        ? `Service: ${serviceTitle} | Notes: ${notes.trim()}`
+        : `Service Reserved: ${serviceTitle}`,
+      receipt_image: receiptFile,
     };
 
     try {
@@ -99,7 +132,11 @@ export default function BookingPage() {
         setApiError("");
         setStep(3);
       } else {
-        setApiError(res.error || res.message || "Failed to book appointment. Please verify details.");
+        setApiError(
+          res.error ||
+            res.message ||
+            "Failed to book appointment. Please verify details."
+        );
       }
     } catch (err: any) {
       setIsSubmitting(false);
@@ -109,14 +146,18 @@ export default function BookingPage() {
 
   const getSelectedServiceTitle = () => {
     const matched = liveServices.find(
-      (s) => String(s.id) === selectedService || s.title.toLowerCase() === selectedService.toLowerCase()
+      (s) =>
+        String(s.id) === selectedService ||
+        s.title.toLowerCase() === selectedService.toLowerCase()
     );
     return matched ? matched.title : selectedService || "Custom Service";
   };
 
   const getSelectedServicePrice = () => {
     const matched = liveServices.find(
-      (s) => String(s.id) === selectedService || s.title.toLowerCase() === selectedService.toLowerCase()
+      (s) =>
+        String(s.id) === selectedService ||
+        s.title.toLowerCase() === selectedService.toLowerCase()
     );
     if (matched) {
       const finalPrice = matched.discounted_price || matched.price;
@@ -129,7 +170,7 @@ export default function BookingPage() {
     <main className="min-h-screen bg-[#FAFAFA] text-[#111111] relative">
       <Navbar />
 
-      <section className="pt-32 pb-24 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+      <section className="pt-36 pb-24 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="bg-white border border-slate-200 rounded-3xl p-8 sm:p-12 shadow-xl">
           <div className="text-center space-y-2 mb-10">
             <div className="w-14 h-14 rounded-full border-2 border-[#D4AF37] p-0.5 mx-auto bg-white">
@@ -144,14 +185,44 @@ export default function BookingPage() {
             <h1 className="font-sans text-3xl font-extrabold uppercase text-[#111111]">
               ONLINE APPOINTMENT RESERVATION
             </h1>
+            <div className="w-16 h-1 bg-[#D4AF37] mx-auto rounded-full" />
             <p className="text-slate-600 text-xs font-normal">
               Jugnu&apos;s Saloon • Select your service and reserve your spot in seconds.
             </p>
           </div>
 
+          {/* Member Login Notice if not logged in */}
+          {!isAuthenticated && (
+            <div className="mb-8 max-w-xl mx-auto p-4 rounded-2xl bg-[#111111] text-white flex flex-col sm:flex-row items-center justify-between gap-4 shadow-md">
+              <div className="space-y-0.5 text-center sm:text-left">
+                <p className="text-xs font-bold text-[#D4AF37] uppercase tracking-wider">
+                  Client Authentication
+                </p>
+                <p className="text-[11px] text-slate-300">
+                  Sign in or create an account for 1-click booking & member perks.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() =>
+                  openAuthModal(
+                    "Sign in or register to book your appointment.",
+                    (logged) => {
+                      setClientName(logged.name);
+                      setClientPhone(logged.phone_no1);
+                    }
+                  )
+                }
+                className="px-5 py-2.5 rounded-full bg-[#D4AF37] text-black font-bold text-xs uppercase tracking-wider hover:bg-white transition-all whitespace-nowrap cursor-pointer"
+              >
+                Sign In / Register
+              </button>
+            </div>
+          )}
+
           {step === 1 && (
             <div className="space-y-6 max-w-xl mx-auto">
-              {/* Service Selection (Fetched Live via API) */}
+              {/* Service Selection */}
               <div>
                 <label className="block text-xs uppercase font-bold text-slate-700 mb-1.5">
                   Select Service
@@ -162,7 +233,9 @@ export default function BookingPage() {
                   className="w-full p-3.5 rounded-xl bg-[#FAFAFA] border border-slate-300 text-xs font-medium text-[#111111] focus:border-[#D4AF37] focus:outline-none"
                 >
                   <option value="">
-                    {loadingServices ? "-- Loading Live API Services... --" : "-- Choose A Beauty Service --"}
+                    {loadingServices
+                      ? "-- Loading Live API Services... --"
+                      : "-- Choose A Beauty Service --"}
                   </option>
                   {liveServices.map((service) => {
                     const finalPrice = service.discounted_price || service.price;
@@ -247,7 +320,10 @@ export default function BookingPage() {
                 <div>
                   <p className="font-bold text-[#111111]">{getSelectedServiceTitle()}</p>
                   <p className="text-[11px] text-slate-500 font-medium">
-                    {selectedDate} at {selectedTime} • <span className="text-[#996515] font-bold">{getSelectedServicePrice()}</span>
+                    {selectedDate} at {selectedTime} •{" "}
+                    <span className="text-[#996515] font-bold">
+                      {getSelectedServicePrice()}
+                    </span>
                   </p>
                 </div>
                 <button
@@ -300,6 +376,36 @@ export default function BookingPage() {
                     className="w-full p-3.5 rounded-xl bg-[#FAFAFA] border border-slate-300 text-xs font-medium text-[#111111] focus:border-[#D4AF37] focus:outline-none"
                   />
                 </div>
+              </div>
+
+              <div>
+                <label className="block text-xs uppercase font-bold text-slate-700 mb-1">
+                  Special Notes / Requests (Optional)
+                </label>
+                <input
+                  type="text"
+                  placeholder="e.g. Bridal dressing, sensitive skin, etc."
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value)}
+                  className="w-full p-3.5 rounded-xl bg-[#FAFAFA] border border-slate-300 text-xs font-medium text-[#111111] focus:border-[#D4AF37] focus:outline-none"
+                />
+              </div>
+
+              {/* Advance Payment Receipt Upload */}
+              <div>
+                <label className="block text-xs uppercase font-bold text-slate-700 mb-1">
+                  Advance Payment Receipt (Optional, Max 5MB)
+                </label>
+                <input
+                  type="file"
+                  accept="image/*,.pdf"
+                  onChange={(e) => {
+                    if (e.target.files && e.target.files[0]) {
+                      setReceiptFile(e.target.files[0]);
+                    }
+                  }}
+                  className="w-full p-2.5 rounded-xl bg-[#FAFAFA] border border-slate-300 text-[#111111] text-xs file:mr-3 file:py-1 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-[#111111] file:text-[#D4AF37] hover:file:bg-black cursor-pointer"
+                />
               </div>
 
               <div className="flex items-center space-x-3 pt-2">

@@ -19,6 +19,9 @@ export const metadata: Metadata = {
   ],
 };
 
+import { AuthProvider } from "./context/AuthContext";
+import AuthModal from "./components/AuthModal";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -38,7 +41,10 @@ export default function RootLayout({
         className="min-h-screen bg-[#FAFAFA] text-[#111111] font-sans antialiased selection:bg-[#D4AF37] selection:text-black"
         suppressHydrationWarning
       >
-        {children}
+        <AuthProvider>
+          {children}
+          <AuthModal />
+        </AuthProvider>
       </body>
     </html>
   );

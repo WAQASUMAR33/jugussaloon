@@ -1,0 +1,188 @@
+"use client";
+
+import { useState, useEffect } from "react";
+import Link from "next/link";
+import { getGalleries, GalleryItem, normalizeImageUrl } from "../lib/api";
+
+const FALLBACK_WORK_ITEMS: GalleryItem[] = [
+  {
+    id: 101,
+    title: "Signature Royal HD Airbrush Bridal Glam",
+    category: "Bridal Makeup",
+    image_url: "/images/bridal_makeup.png",
+  },
+  {
+    id: 102,
+    title: "24K Gold Hydra-Facial Glow & Skin Rejuvenation",
+    category: "Skin Spa",
+    image_url: "/images/beauty_facial.png",
+  },
+  {
+    id: 103,
+    title: "Hand-Painted Balayage & Dimensional Tone",
+    category: "Hair Artistry",
+    image_url: "/images/hair_styling.png",
+  },
+  {
+    id: 104,
+    title: "Deep Conditioning Scalp Therapy & Blowdry",
+    category: "Hair & Scalp",
+    image_url: "/images/hair_washing.png",
+  },
+  {
+    id: 105,
+    title: "Bespoke Bridal Henna & Mehndi Art",
+    category: "Bridal Studio",
+    image_url: "/images/bridal_makeup.png",
+  },
+  {
+    id: 106,
+    title: "VIP Executive Styling & Luxury Ambience",
+    category: "Salon Ambience",
+    image_url: "/images/hero_salon.png",
+  },
+];
+
+interface WorkShowcaseProps {
+  onOpenBooking?: (serviceName?: string) => void;
+}
+
+export default function WorkShowcase({ onOpenBooking }: WorkShowcaseProps = {}) {
+  const [items, setItems] = useState<GalleryItem[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [lightboxImage, setLightboxImage] = useState<string | null>(null);
+
+  useEffect(() => {
+    async function loadGalleryData() {
+      try {
+        const data = await getGalleries();
+        if (data && data.length > 0) {
+          const merged = [...data];
+          if (merged.length < 6) {
+            FALLBACK_WORK_ITEMS.forEach((fb) => {
+              if (merged.length < 6 && !merged.some((m) => m.title === fb.title)) {
+                merged.push(fb);
+              }
+            });
+          }
+          setItems(merged.slice(0, 6));
+        } else {
+          setItems(FALLBACK_WORK_ITEMS.slice(0, 6));
+        }
+      } catch (err) {
+        console.error("Failed to fetch gallery items:", err);
+        setItems(FALLBACK_WORK_ITEMS.slice(0, 6));
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    loadGalleryData();
+  }, []);
+
+  return (
+    <section className="py-24 bg-[#FAFAFA] text-[#111111] relative overflow-hidden border-t border-slate-200">
+      <div className="max-w-[1480px] mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+        {/* Section Header */}
+        <div className="flex flex-col md:flex-row md:items-end justify-between mb-14 gap-6">
+          <div className="space-y-3 max-w-2xl">
+            <h2 className="font-sans text-3xl sm:text-5xl font-extrabold uppercase tracking-tight text-[#111111]">
+              OUR WORK & TRANSFORMATIONS
+            </h2>
+            <div className="w-16 h-1 bg-[#D4AF37] rounded-full" />
+            <p className="text-slate-600 text-sm leading-relaxed font-normal">
+              A curated Pinterest showcase of bridal artistry, precision cuts, and aesthetic treatments in their natural resolution.
+            </p>
+          </div>
+
+          <div>
+            <Link
+              href="/our-work"
+              className="inline-flex items-center space-x-2 px-8 py-4 rounded-full bg-[#111111] text-white font-bold text-xs uppercase tracking-widest hover:bg-[#D4AF37] hover:text-black transition-all shadow-md group"
+            >
+              <span>EXPLORE ALL WORK</span>
+              <span className="group-hover:translate-x-1 transition-transform">&rarr;</span>
+            </Link>
+          </div>
+        </div>
+
+        {/* True Pinterest Masonry Showcase (Preserves Natural Aspect Ratios) */}
+        {loading ? (
+          <div className="columns-1 sm:columns-2 lg:columns-3 gap-6">
+            {[320, 440, 280, 400, 350, 300].map((h, idx) => (
+              <div
+                key={idx}
+                style={{ height: `${h}px` }}
+                className="break-inside-avoid mb-6 rounded-2xl sm:rounded-3xl bg-slate-200 border border-slate-300 animate-pulse"
+              />
+            ))}
+          </div>
+        ) : (
+          <div className="columns-1 sm:columns-2 lg:columns-3 gap-6 [column-fill:_balance]">
+            {items.map((item, idx) => {
+              const imageSrc = normalizeImageUrl(item.image_url, item.image_path);
+
+              return (
+                <div
+                  key={item.id || idx}
+                  onClick={() => setLightboxImage(imageSrc)}
+                  className="break-inside-avoid mb-6 group relative w-full rounded-2xl sm:rounded-3xl overflow-hidden bg-white shadow-sm hover:shadow-2xl border border-slate-200/80 hover:border-[#D4AF37] transition-all duration-300 cursor-pointer"
+                >
+                  {/* True Natural Aspect Ratio Image */}
+                  <img
+                    src={imageSrc}
+                    alt={item.title || "Saloon Transformation"}
+                    loading="lazy"
+                    className="w-full h-auto block object-contain sm:object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
+                  />
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        {/* Bottom CTA Button */}
+        <div className="mt-10 text-center">
+          <Link
+            href="/our-work"
+            className="inline-flex items-center space-x-3 px-10 py-4 rounded-full bg-[#111111] text-white font-bold text-xs uppercase tracking-widest hover:bg-[#D4AF37] hover:text-black transition-all shadow-lg hover:shadow-xl group"
+          >
+            <span>See More Transformations in Pinterest Gallery</span>
+            <span className="group-hover:translate-x-1 transition-transform">&rarr;</span>
+          </Link>
+        </div>
+      </div>
+
+      {/* Full-Image Lightbox */}
+      {lightboxImage && (
+        <div
+          className="fixed inset-0 z-[200] flex items-center justify-center p-4 sm:p-8 bg-black/90 backdrop-blur-md animate-fadeIn cursor-zoom-out"
+          onClick={() => setLightboxImage(null)}
+        >
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              setLightboxImage(null);
+            }}
+            className="absolute top-6 right-6 z-30 w-12 h-12 rounded-full bg-white/20 text-white flex items-center justify-center hover:bg-[#D4AF37] hover:text-black transition-all cursor-pointer shadow-lg text-lg font-bold"
+            aria-label="Close image"
+          >
+            ✕
+          </button>
+
+          <div
+            className="relative max-w-6xl max-h-[90vh] flex items-center justify-center cursor-default"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <img
+              src={lightboxImage}
+              alt="Full Size Work"
+              className="max-h-[90vh] max-w-full w-auto h-auto object-contain rounded-2xl shadow-2xl"
+            />
+          </div>
+        </div>
+      )}
+    </section>
+  );
+}

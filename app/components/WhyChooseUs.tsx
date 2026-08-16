@@ -25,7 +25,7 @@ export default function WhyChooseUs({ onOpenBooking }: WhyChooseUsProps) {
           {/* ── LEFT: Image card with overlay heading ── */}
           <div className="relative rounded-2xl overflow-hidden shadow-2xl group" style={{ minHeight: "480px" }}>
             <Image
-              src="/images/bridal_makeup.png"
+              src="/images/22.jpeg"
               alt="Diverse Styling at Jugnu's Saloon"
               fill
               className="object-cover object-center group-hover:scale-105 transition-transform duration-700"

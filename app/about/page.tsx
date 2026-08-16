@@ -4,6 +4,7 @@ import { useState } from "react";
 import Navbar from "../components/Navbar";
 import AboutSection from "../components/AboutSection";
 import WhyChooseUs from "../components/WhyChooseUs";
+import GoogleReviews from "../components/GoogleReviews";
 import LocationMap from "../components/LocationMap";
 import Footer from "../components/Footer";
 import BookingModal from "../components/BookingModal";
@@ -47,6 +48,9 @@ export default function AboutPage() {
 
       {/* Why Choose Us */}
       <WhyChooseUs onOpenBooking={handleOpenBooking} />
+
+      {/* Google 5-Star Reviews Section */}
+      <GoogleReviews />
 
       {/* Saloon Location & Google Map */}
       <LocationMap />

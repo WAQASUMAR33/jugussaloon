@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import Image from "next/image";
 import { bookAppointment, getServices, ServiceItem } from "../lib/api";
+import { useAuth } from "../context/AuthContext";
 
 interface BookingModalProps {
   isOpen: boolean;
@@ -15,6 +16,8 @@ export default function BookingModal({
   onClose,
   initialService = "",
 }: BookingModalProps) {
+  const { customer, isAuthenticated, openAuthModal } = useAuth();
+
   const [step, setStep] = useState<number>(1);
   const [selectedService, setSelectedService] = useState<string>("");
   const [selectedDate, setSelectedDate] = useState<string>("");
@@ -22,11 +25,21 @@ export default function BookingModal({
   const [clientName, setClientName] = useState<string>("");
   const [clientPhone, setClientPhone] = useState<string>("");
   const [clientEmail, setClientEmail] = useState<string>("");
+  const [notes, setNotes] = useState<string>("");
+  const [receiptFile, setReceiptFile] = useState<File | null>(null);
   const [bookingRef, setBookingRef] = useState<string>("");
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [apiError, setApiError] = useState<string>("");
   const [liveServices, setLiveServices] = useState<ServiceItem[]>([]);
   const [loadingServices, setLoadingServices] = useState<boolean>(true);
+
+  // Autofill client details when customer logs in or is authenticated
+  useEffect(() => {
+    if (customer) {
+      setClientName(customer.name || "");
+      setClientPhone(customer.phone_no1 || "");
+    }
+  }, [customer]);
 
   // Load services live from backend API
   useEffect(() => {
@@ -37,7 +50,6 @@ export default function BookingModal({
         if (data && data.length > 0) {
           setLiveServices(data);
 
-          // If initialService match exists in liveServices
           if (initialService) {
             const matched = data.find(
               (s) =>
@@ -59,6 +71,7 @@ export default function BookingModal({
         setLoadingServices(false);
       }
     }
+
     if (isOpen) {
       loadApiServices();
       // Default to tomorrow's date if empty
@@ -67,13 +80,37 @@ export default function BookingModal({
         tomorrow.setDate(tomorrow.getDate() + 1);
         setSelectedDate(tomorrow.toISOString().split("T")[0]);
       }
+
+      // If user is not authenticated, prompt sign in modal
+      if (!isAuthenticated) {
+        openAuthModal(
+          "Please sign in or create an account to reserve and track your appointment at Jugnu's Saloon.",
+          (loggedCustomer) => {
+            setClientName(loggedCustomer.name);
+            setClientPhone(loggedCustomer.phone_no1);
+          }
+        );
+      }
     }
-  }, [isOpen, initialService]);
+  }, [isOpen, initialService, isAuthenticated, openAuthModal, selectedDate]);
 
   if (!isOpen) return null;
 
   const handleConfirmBooking = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // If not authenticated, require login first
+    if (!isAuthenticated && !customer) {
+      openAuthModal(
+        "Please sign in or register to finalize your booking.",
+        (loggedCustomer) => {
+          setClientName(loggedCustomer.name);
+          setClientPhone(loggedCustomer.phone_no1);
+        }
+      );
+      return;
+    }
+
     if (!clientName.trim() || !clientPhone.trim()) {
       setApiError("Please provide your full name and contact phone number.");
       return;
@@ -82,7 +119,7 @@ export default function BookingModal({
     setIsSubmitting(true);
     setApiError("");
 
-    // Format time from 12-hour AM/PM to 24-hour HH:mm format for backend API
+    // Format time to 24-hour HH:mm
     let formattedTime = "14:00";
     if (selectedTime) {
       const match = selectedTime.match(/(\d+):(\d+)\s*(AM|PM)/i);
@@ -96,22 +133,29 @@ export default function BookingModal({
       }
     }
 
-    // Match service ID from liveServices
+    // Match service ID
     const matchedService = liveServices.find(
-      (s) => String(s.id) === selectedService || s.title.toLowerCase() === selectedService.toLowerCase()
+      (s) =>
+        String(s.id) === selectedService ||
+        s.title.toLowerCase() === selectedService.toLowerCase()
     );
 
-    const serviceIdNum = matchedService ? matchedService.id : (parseInt(selectedService, 10) || 1);
+    const serviceIdNum = matchedService
+      ? matchedService.id
+      : parseInt(selectedService, 10) || 1;
     const serviceTitle = matchedService ? matchedService.title : selectedService;
 
     const payload = {
       customer_name: clientName.trim(),
       customer_phone: clientPhone.trim(),
-      customer_email: clientEmail.trim() || "client@jugnussaloon.com",
+      customer_email: clientEmail.trim() || undefined,
       appointment_date: selectedDate || new Date().toISOString().split("T")[0],
       start_time: formattedTime,
       service_ids: [serviceIdNum],
-      notes: `Service Requested: ${serviceTitle}`,
+      notes: notes.trim()
+        ? `Service: ${serviceTitle} | Notes: ${notes.trim()}`
+        : `Service Requested: ${serviceTitle}`,
+      receipt_image: receiptFile,
     };
 
     try {
@@ -127,7 +171,11 @@ export default function BookingModal({
         setApiError("");
         setStep(3);
       } else {
-        setApiError(res.error || res.message || "Failed to book appointment. Please check your details.");
+        setApiError(
+          res.error ||
+            res.message ||
+            "Failed to book appointment. Please check your details."
+        );
       }
     } catch (err: any) {
       setIsSubmitting(false);
@@ -139,19 +187,24 @@ export default function BookingModal({
     setStep(1);
     setBookingRef("");
     setApiError("");
+    setReceiptFile(null);
     onClose();
   };
 
   const getSelectedServiceTitle = () => {
     const matched = liveServices.find(
-      (s) => String(s.id) === selectedService || s.title.toLowerCase() === selectedService.toLowerCase()
+      (s) =>
+        String(s.id) === selectedService ||
+        s.title.toLowerCase() === selectedService.toLowerCase()
     );
     return matched ? matched.title : selectedService || "Custom Salon Service";
   };
 
   const getSelectedServicePrice = () => {
     const matched = liveServices.find(
-      (s) => String(s.id) === selectedService || s.title.toLowerCase() === selectedService.toLowerCase()
+      (s) =>
+        String(s.id) === selectedService ||
+        s.title.toLowerCase() === selectedService.toLowerCase()
     );
     if (matched) {
       const finalPrice = matched.discounted_price || matched.price;
@@ -161,8 +214,8 @@ export default function BookingModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fadeIn">
-      <div className="relative w-full max-w-xl bg-white border border-slate-200 rounded-3xl shadow-2xl overflow-hidden text-[#111111]">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-fadeIn">
+      <div className="relative w-full max-w-xl bg-white border border-slate-200 rounded-3xl shadow-2xl overflow-hidden text-[#111111] max-h-[92vh] flex flex-col">
         {/* Header Bar */}
         <div className="p-6 bg-[#FAFAFA] border-b border-slate-200 flex items-center justify-between">
           <div className="flex items-center space-x-3">
@@ -180,7 +233,7 @@ export default function BookingModal({
                 RESERVE BEAUTY APPOINTMENT
               </h3>
               <p className="text-[10px] text-[#996515] uppercase tracking-widest font-bold">
-                Jugnu&apos;s Saloon Booking System
+                Jugnu&apos;s Saloon Online Booking
               </p>
             </div>
           </div>
@@ -194,7 +247,36 @@ export default function BookingModal({
         </div>
 
         {/* Modal Body */}
-        <div className="p-6">
+        <div className="p-6 overflow-y-auto flex-1">
+          {/* Auth Banner if not logged in */}
+          {!isAuthenticated && (
+            <div className="mb-5 p-4 rounded-2xl bg-[#111111] text-white flex flex-col sm:flex-row items-center justify-between gap-3 shadow-md">
+              <div className="space-y-0.5 text-center sm:text-left">
+                <p className="text-xs font-bold text-[#D4AF37] uppercase tracking-wider">
+                  Member Privileges
+                </p>
+                <p className="text-[11px] text-slate-300">
+                  Sign in or register to save booking history & VIP discounts.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() =>
+                  openAuthModal(
+                    "Sign in or register to book your appointment.",
+                    (logged) => {
+                      setClientName(logged.name);
+                      setClientPhone(logged.phone_no1);
+                    }
+                  )
+                }
+                className="px-4 py-2 rounded-full bg-[#D4AF37] text-black font-bold text-[11px] uppercase tracking-wider hover:bg-white transition-all whitespace-nowrap cursor-pointer"
+              >
+                Sign In / Register
+              </button>
+            </div>
+          )}
+
           {step === 1 && (
             <div className="space-y-5">
               <div className="text-center space-y-1">
@@ -204,7 +286,7 @@ export default function BookingModal({
                 <h4 className="font-sans text-lg font-bold">Select Service & Date</h4>
               </div>
 
-              {/* Service Selection (Fetched Live via API) */}
+              {/* Service Selection */}
               <div>
                 <label className="block text-xs uppercase tracking-wider text-slate-700 font-bold mb-1.5">
                   Choose Service
@@ -215,7 +297,9 @@ export default function BookingModal({
                   className="w-full p-3.5 rounded-xl bg-[#FAFAFA] border border-slate-300 text-[#111111] focus:border-[#D4AF37] focus:outline-none text-xs font-medium"
                 >
                   <option value="">
-                    {loadingServices ? "-- Loading Live API Services... --" : "-- Select A Service --"}
+                    {loadingServices
+                      ? "-- Loading Live API Services... --"
+                      : "-- Select A Service --"}
                   </option>
                   {liveServices.map((service) => {
                     const finalPrice = service.discounted_price || service.price;
@@ -305,7 +389,9 @@ export default function BookingModal({
               <div className="p-4 rounded-2xl bg-[#FAFAFA] border border-slate-200 space-y-1.5 text-xs">
                 <div className="flex justify-between">
                   <span className="text-slate-500">Service:</span>
-                  <span className="font-bold text-[#111111]">{getSelectedServiceTitle()}</span>
+                  <span className="font-bold text-[#111111]">
+                    {getSelectedServiceTitle()}
+                  </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-slate-500">Date &amp; Time:</span>
@@ -359,6 +445,36 @@ export default function BookingModal({
                   value={clientEmail}
                   onChange={(e) => setClientEmail(e.target.value)}
                   className="w-full p-3 rounded-xl bg-[#FAFAFA] border border-slate-300 text-[#111111] focus:border-[#D4AF37] focus:outline-none text-xs"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs uppercase tracking-wider text-slate-700 font-bold mb-1">
+                  Special Notes / Requests (Optional)
+                </label>
+                <input
+                  type="text"
+                  placeholder="e.g. Sensitive skin, bridal veil setting, etc."
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value)}
+                  className="w-full p-3 rounded-xl bg-[#FAFAFA] border border-slate-300 text-[#111111] focus:border-[#D4AF37] focus:outline-none text-xs"
+                />
+              </div>
+
+              {/* Optional Advance Receipt Upload */}
+              <div>
+                <label className="block text-xs uppercase tracking-wider text-slate-700 font-bold mb-1">
+                  Advance Payment Receipt (Optional, Max 5MB)
+                </label>
+                <input
+                  type="file"
+                  accept="image/*,.pdf"
+                  onChange={(e) => {
+                    if (e.target.files && e.target.files[0]) {
+                      setReceiptFile(e.target.files[0]);
+                    }
+                  }}
+                  className="w-full p-2.5 rounded-xl bg-[#FAFAFA] border border-slate-300 text-[#111111] text-xs file:mr-3 file:py-1 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-[#111111] file:text-[#D4AF37] hover:file:bg-black cursor-pointer"
                 />
               </div>
 
