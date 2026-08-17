@@ -7,64 +7,6 @@ import Footer from "../components/Footer";
 import BookingModal from "../components/BookingModal";
 import { getGalleries, GalleryItem, normalizeImageUrl } from "../lib/api";
 
-// Curated high-res transformation portfolio items for fallback/supplement
-const CURATED_PORTFOLIO: GalleryItem[] = [
-  {
-    id: 201,
-    title: "Royal HD Airbrush Bridal Glam",
-    category: "Bridal",
-    image_url: "/images/bridal_makeup.png",
-  },
-  {
-    id: 202,
-    title: "24K Gold Hydra-Facial Glow",
-    category: "Skin Spa",
-    image_url: "/images/beauty_facial.png",
-  },
-  {
-    id: 203,
-    title: "Signature Balayage & Tone",
-    category: "Hair",
-    image_url: "/images/hair_styling.png",
-  },
-  {
-    id: 204,
-    title: "Luxury Scalp Detox & Rinse",
-    category: "Hair & Scalp",
-    image_url: "/images/hair_washing.png",
-  },
-  {
-    id: 205,
-    title: "Professional Salon Care Products",
-    category: "Care",
-    image_url: "/images/hair_products.png",
-  },
-  {
-    id: 206,
-    title: "VIP Executive Styling Ambience",
-    category: "Ambience",
-    image_url: "/images/hero_salon.png",
-  },
-  {
-    id: 207,
-    title: "Traditional Bridal Glam",
-    category: "Bridal",
-    image_url: "/images/bridal_makeup.png",
-  },
-  {
-    id: 208,
-    title: "Ultra-Hydration Anti-Aging Glow",
-    category: "Skin Spa",
-    image_url: "/images/beauty_facial.png",
-  },
-  {
-    id: 209,
-    title: "Gloss Finish Blowout & Cut",
-    category: "Hair",
-    image_url: "/images/hair_styling.png",
-  },
-];
-
 export default function OurWorkPage() {
   const [bookingOpen, setBookingOpen] = useState(false);
   const [selectedService, setSelectedService] = useState("");
@@ -83,20 +25,14 @@ export default function OurWorkPage() {
       try {
         setLoading(true);
         const data = await getGalleries();
-        if (data && data.length > 0) {
-          const combined = [...data];
-          CURATED_PORTFOLIO.forEach((item) => {
-            if (!combined.some((c) => c.title === item.title)) {
-              combined.push(item);
-            }
-          });
-          setGalleries(combined);
+        if (data && Array.isArray(data)) {
+          setGalleries(data);
         } else {
-          setGalleries(CURATED_PORTFOLIO);
+          setGalleries([]);
         }
       } catch (err) {
         console.error("Failed to load gallery items:", err);
-        setGalleries(CURATED_PORTFOLIO);
+        setGalleries([]);
       } finally {
         setLoading(false);
       }

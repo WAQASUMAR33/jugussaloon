@@ -4,45 +4,6 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { getGalleries, GalleryItem, normalizeImageUrl } from "../lib/api";
 
-const FALLBACK_WORK_ITEMS: GalleryItem[] = [
-  {
-    id: 101,
-    title: "Signature Royal HD Airbrush Bridal Glam",
-    category: "Bridal Makeup",
-    image_url: "/images/bridal_makeup.png",
-  },
-  {
-    id: 102,
-    title: "24K Gold Hydra-Facial Glow & Skin Rejuvenation",
-    category: "Skin Spa",
-    image_url: "/images/beauty_facial.png",
-  },
-  {
-    id: 103,
-    title: "Hand-Painted Balayage & Dimensional Tone",
-    category: "Hair Artistry",
-    image_url: "/images/hair_styling.png",
-  },
-  {
-    id: 104,
-    title: "Deep Conditioning Scalp Therapy & Blowdry",
-    category: "Hair & Scalp",
-    image_url: "/images/hair_washing.png",
-  },
-  {
-    id: 105,
-    title: "Bespoke Bridal Henna & Mehndi Art",
-    category: "Bridal Studio",
-    image_url: "/images/bridal_makeup.png",
-  },
-  {
-    id: 106,
-    title: "VIP Executive Styling & Luxury Ambience",
-    category: "Salon Ambience",
-    image_url: "/images/hero_salon.png",
-  },
-];
-
 interface WorkShowcaseProps {
   onOpenBooking?: (serviceName?: string) => void;
 }
@@ -56,22 +17,14 @@ export default function WorkShowcase({ onOpenBooking }: WorkShowcaseProps = {}) 
     async function loadGalleryData() {
       try {
         const data = await getGalleries();
-        if (data && data.length > 0) {
-          const merged = [...data];
-          if (merged.length < 6) {
-            FALLBACK_WORK_ITEMS.forEach((fb) => {
-              if (merged.length < 6 && !merged.some((m) => m.title === fb.title)) {
-                merged.push(fb);
-              }
-            });
-          }
-          setItems(merged.slice(0, 6));
+        if (data && Array.isArray(data)) {
+          setItems(data.slice(0, 6));
         } else {
-          setItems(FALLBACK_WORK_ITEMS.slice(0, 6));
+          setItems([]);
         }
       } catch (err) {
         console.error("Failed to fetch gallery items:", err);
-        setItems(FALLBACK_WORK_ITEMS.slice(0, 6));
+        setItems([]);
       } finally {
         setLoading(false);
       }
