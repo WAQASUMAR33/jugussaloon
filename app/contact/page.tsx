@@ -7,16 +7,13 @@ import BookingModal from "../components/BookingModal";
 import NewsPress from "../components/NewsPress";
 import LocationMap from "../components/LocationMap";
 import Image from "next/image";
-import { submitContact } from "../lib/api";
 import { useAuth } from "../context/AuthContext";
 
 export default function ContactPage() {
   const { customer } = useAuth();
   const [bookingOpen, setBookingOpen] = useState(false);
   const [submitted, setSubmitted] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [apiMessage, setApiMessage] = useState("");
-  const [apiError, setApiError] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -36,36 +33,33 @@ export default function ContactPage() {
     }
   }, [customer]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const getWhatsAppUrl = () => {
+    const formattedMessage = `Name: ${formData.name.trim()}
+Gmail: ${formData.email.trim()}
+Phone Num: ${formData.phone.trim() || "Not provided"}
+Inquiry: ${formData.subject}
+Message:
+${formData.message.trim()}`;
+
+    return `https://wa.me/923194415757?text=${encodeURIComponent(formattedMessage)}`;
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.name.trim() || !formData.email.trim() || !formData.message.trim()) {
-      setApiError("Please provide your name, email, and message.");
+      setErrorMessage("Please provide your name, email, and message.");
       return;
     }
 
-    setIsSubmitting(true);
-    setApiError("");
-    
-    try {
-      const res = await submitContact({
-        name: formData.name.trim(),
-        email: formData.email.trim(),
-        phone: formData.phone.trim() || undefined,
-        subject: formData.subject,
-        message: formData.message.trim(),
-      });
-      
-      setIsSubmitting(false);
-      if (res.success) {
-        setApiMessage(res.message || "Thank you for reaching out! Your message has been received.");
-        setSubmitted(true);
-      } else {
-        setApiError(res.error || res.message || "Failed to send message. Please try again.");
-      }
-    } catch (err: any) {
-      setIsSubmitting(false);
-      setApiError(err?.message || "An unexpected error occurred. Please try again.");
+    setErrorMessage("");
+    const url = getWhatsAppUrl();
+
+    // Open WhatsApp in a new tab/app
+    if (typeof window !== "undefined") {
+      window.open(url, "_blank");
     }
+
+    setSubmitted(true);
   };
 
   return (
@@ -104,39 +98,52 @@ export default function ContactPage() {
               </h2>
               <div className="w-12 h-1 bg-[#D4AF37] mb-4 rounded-full" />
               <p className="text-xs text-slate-600 font-normal mb-8">
-                Fill out the form below and our salon concierge will respond within 2 hours.
+                Fill out the form below and send directly via WhatsApp to chat with our concierge instantly.
               </p>
 
-              {apiError && (
+              {errorMessage && (
                 <div className="mb-6 p-4 rounded-2xl bg-red-50 border border-red-200 text-red-700 text-xs font-semibold">
-                  ⚠️ {apiError}
+                  ⚠️ {errorMessage}
                 </div>
               )}
 
               {submitted ? (
-                <div className="p-8 rounded-3xl bg-white border border-[#D4AF37] text-center space-y-4 shadow-sm">
-                  <div className="w-14 h-14 rounded-full bg-[#F5E8C7] text-[#856404] mx-auto flex items-center justify-center font-bold text-2xl">
-                    ✓
+                <div className="p-8 rounded-3xl bg-white border border-[#25D366] text-center space-y-4 shadow-sm">
+                  <div className="w-14 h-14 rounded-full bg-emerald-100 text-[#25D366] mx-auto flex items-center justify-center font-bold text-2xl shadow-sm">
+                    <svg className="w-8 h-8" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M12.012 2c-5.506 0-9.989 4.478-9.99 9.984 0 1.764.459 3.487 1.332 5.006l-1.417 5.176 5.297-1.389c1.468.802 3.129 1.224 4.775 1.225h.004c5.505 0 9.988-4.478 9.989-9.984 0-2.669-1.038-5.178-2.925-7.064s-4.395-2.924-7.065-2.924zm0 18.232h-.003c-1.494 0-2.962-.401-4.246-1.161l-.305-.181-3.158.828.842-3.078-.199-.316c-.836-1.33-1.278-2.871-1.278-4.45 0-4.526 3.682-8.209 8.212-8.209 2.194 0 4.256.855 5.807 2.407s2.406 3.614 2.406 5.808c-.001 4.527-3.683 8.209-8.21 8.209zm4.506-6.148c-.247-.124-1.462-.722-1.689-.804-.227-.082-.392-.124-.557.124-.165.247-.641.804-.785.969-.144.165-.289.185-.536.062-.247-.124-1.043-.385-1.987-1.227-.735-.656-1.232-1.467-1.376-1.714-.144-.247-.015-.38.109-.503.111-.11.247-.289.371-.433.124-.144.165-.247.247-.412.082-.165.041-.309-.021-.433-.062-.124-.557-1.341-.763-1.836-.201-.482-.405-.417-.557-.425-.144-.008-.309-.009-.474-.009s-.433.062-.659.309c-.227.247-.866.846-.866 2.063s.886 2.392 1.01 2.557c.124.165 1.744 2.663 4.225 3.734.59.255 1.051.407 1.411.521.593.188 1.132.161 1.558.098.475-.07 1.462-.598 1.669-1.176.206-.578.206-1.073.144-1.176-.062-.103-.227-.165-.474-.289z" />
+                    </svg>
                   </div>
-                  <h3 className="font-sans text-xl font-bold text-[#111111] uppercase">MESSAGE RECEIVED!</h3>
-                  <p className="text-xs text-slate-600 font-normal max-w-md mx-auto">
-                    {apiMessage || `Thank you, ${formData.name}. Our concierge team will reach out to you shortly.`}
+                  <h3 className="font-sans text-xl font-bold text-[#111111] uppercase">OPENED IN WHATSAPP!</h3>
+                  <p className="text-xs text-slate-600 font-normal max-w-md mx-auto leading-relaxed">
+                    Thank you, <strong className="text-black">{formData.name}</strong>. Your formatted inquiry has been prepared in WhatsApp. Simply tap send in your WhatsApp app to start chatting with our concierge.
                   </p>
-                  <button
-                    onClick={() => {
-                      setSubmitted(false);
-                      setFormData({
-                        name: customer?.name || "",
-                        email: "",
-                        phone: customer?.phone_no1 || "",
-                        subject: "Bridal & Beauty Inquiry",
-                        message: "",
-                      });
-                    }}
-                    className="px-8 py-3 rounded-full bg-[#111111] text-white text-xs font-bold uppercase tracking-wider hover:bg-[#D4AF37] hover:text-black transition-all cursor-pointer shadow-md"
-                  >
-                    Send Another Message
-                  </button>
+                  <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
+                    <a
+                      href={getWhatsAppUrl()}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="w-full sm:w-auto px-6 py-3 rounded-full bg-[#25D366] hover:bg-[#20ba59] text-white text-xs font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-2 shadow-md"
+                    >
+                      <span>Re-Open WhatsApp</span>
+                      <span>↗</span>
+                    </a>
+                    <button
+                      onClick={() => {
+                        setSubmitted(false);
+                        setFormData({
+                          name: customer?.name || "",
+                          email: "",
+                          phone: customer?.phone_no1 || "",
+                          subject: "Bridal & Beauty Inquiry",
+                          message: "",
+                        });
+                      }}
+                      className="w-full sm:w-auto px-6 py-3 rounded-full bg-[#111111] text-white text-xs font-bold uppercase tracking-wider hover:bg-[#D4AF37] hover:text-black transition-all cursor-pointer shadow-sm"
+                    >
+                      Send Another Inquiry
+                    </button>
+                  </div>
                 </div>
               ) : (
                 <form onSubmit={handleSubmit} className="space-y-5">
@@ -157,11 +164,11 @@ export default function ContactPage() {
 
                     <div className="space-y-1">
                       <label className="block text-xs uppercase font-bold text-slate-700">
-                        Email Address *
+                        Email Address (Gmail) *
                       </label>
                       <input
                         type="email"
-                        placeholder="client@example.com"
+                        placeholder="xyz@gmail.com"
                         value={formData.email}
                         onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                         className="w-full p-3.5 rounded-xl bg-white border border-slate-300 text-xs text-[#111111] focus:border-[#D4AF37] focus:outline-none font-medium"
@@ -218,10 +225,12 @@ export default function ContactPage() {
 
                   <button
                     type="submit"
-                    disabled={isSubmitting}
-                    className="w-full py-4 rounded-full bg-[#111111] text-white font-bold text-xs uppercase tracking-widest hover:bg-[#D4AF37] hover:text-black transition-all cursor-pointer shadow-md disabled:opacity-50"
+                    className="w-full py-4 rounded-full bg-[#25D366] hover:bg-[#20ba59] text-white font-bold text-xs uppercase tracking-widest transition-all cursor-pointer shadow-md flex items-center justify-center space-x-2.5 group"
                   >
-                    {isSubmitting ? "Sending Inquiry to Server..." : "Submit Inquiry to Concierge"}
+                    <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24">
+                      <path d="M12.012 2c-5.506 0-9.989 4.478-9.99 9.984 0 1.764.459 3.487 1.332 5.006l-1.417 5.176 5.297-1.389c1.468.802 3.129 1.224 4.775 1.225h.004c5.505 0 9.988-4.478 9.989-9.984 0-2.669-1.038-5.178-2.925-7.064s-4.395-2.924-7.065-2.924zm0 18.232h-.003c-1.494 0-2.962-.401-4.246-1.161l-.305-.181-3.158.828.842-3.078-.199-.316c-.836-1.33-1.278-2.871-1.278-4.45 0-4.526 3.682-8.209 8.212-8.209 2.194 0 4.256.855 5.807 2.407s2.406 3.614 2.406 5.808c-.001 4.527-3.683 8.209-8.21 8.209zm4.506-6.148c-.247-.124-1.462-.722-1.689-.804-.227-.082-.392-.124-.557.124-.165.247-.641.804-.785.969-.144.165-.289.185-.536.062-.247-.124-1.043-.385-1.987-1.227-.735-.656-1.232-1.467-1.376-1.714-.144-.247-.015-.38.109-.503.111-.11.247-.289.371-.433.124-.144.165-.247.247-.412.082-.165.041-.309-.021-.433-.062-.124-.557-1.341-.763-1.836-.201-.482-.405-.417-.557-.425-.144-.008-.309-.009-.474-.009s-.433.062-.659.309c-.227.247-.866.846-.866 2.063s.886 2.392 1.01 2.557c.124.165 1.744 2.663 4.225 3.734.59.255 1.051.407 1.411.521.593.188 1.132.161 1.558.098.475-.07 1.462-.598 1.669-1.176.206-.578.206-1.073.144-1.176-.062-.103-.227-.165-.474-.289z" />
+                    </svg>
+                    <span>Send Message via WhatsApp</span>
                   </button>
                 </form>
               )}
