@@ -62,6 +62,27 @@ export interface AppointmentResponse {
   error?: string;
 }
 
+export interface BankAccountItem {
+  id: number;
+  bank_name?: string;
+  title?: string;
+  account_name?: string;
+  account_title?: string;
+  account_number?: string;
+  account_no?: string;
+  iban?: string;
+  iban_no?: string;
+  branch_code?: string;
+  branch?: string;
+  qr_code?: string;
+  qr_image?: string;
+  image_url?: string | null;
+  description?: string;
+  instructions?: string;
+  is_active?: boolean | number;
+  created_at?: string;
+}
+
 export interface CustomerProfile {
   id: number;
   name: string;
@@ -434,3 +455,30 @@ export async function submitContact(payload: ContactPayload): Promise<ContactRes
     };
   }
 }
+
+/**
+ * Fetch Official Bank Accounts from Backend API
+ */
+export async function getBankAccounts(): Promise<BankAccountItem[]> {
+  try {
+    const res = await fetch(`${API_BASE_URL}/bank-accounts`, {
+      method: 'GET',
+      headers: {
+        'Accept': 'application/json',
+      },
+      next: { revalidate: 60 },
+    });
+
+    if (!res.ok) {
+      console.warn(`[API] getBankAccounts returned status ${res.status}`);
+      return [];
+    }
+
+    const json = await res.json();
+    return json.success && Array.isArray(json.data) ? json.data : [];
+  } catch (error) {
+    console.error('[API] Error in getBankAccounts:', error);
+    return [];
+  }
+}
+

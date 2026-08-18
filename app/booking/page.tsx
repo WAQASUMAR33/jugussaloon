@@ -5,7 +5,13 @@ import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import Image from "next/image";
 import Link from "next/link";
-import { bookAppointment, getServices, ServiceItem } from "../lib/api";
+import {
+  bookAppointment,
+  getServices,
+  getBankAccounts,
+  ServiceItem,
+  BankAccountItem,
+} from "../lib/api";
 import { useAuth } from "../context/AuthContext";
 
 export default function BookingPage() {
@@ -25,6 +31,9 @@ export default function BookingPage() {
   const [apiError, setApiError] = useState<string>("");
   const [liveServices, setLiveServices] = useState<ServiceItem[]>([]);
   const [loadingServices, setLoadingServices] = useState<boolean>(true);
+  const [bankAccounts, setBankAccounts] = useState<BankAccountItem[]>([]);
+  const [loadingBanks, setLoadingBanks] = useState<boolean>(true);
+  const [copiedAccount, setCopiedAccount] = useState<string | null>(null);
 
   // Autofill if customer is logged in
   useEffect(() => {
@@ -35,27 +44,82 @@ export default function BookingPage() {
   }, [customer]);
 
   useEffect(() => {
-    async function loadServices() {
+    async function loadData() {
       try {
         setLoadingServices(true);
-        const services = await getServices();
-        if (services && services.length > 0) {
-          setLiveServices(services);
-          setSelectedService(String(services[0].id));
+        setLoadingBanks(true);
+        const [servicesData, banksData] = await Promise.all([
+          getServices(),
+          getBankAccounts(),
+        ]);
+
+        if (servicesData && servicesData.length > 0) {
+          setLiveServices(servicesData);
+          setSelectedService(String(servicesData[0].id));
+        }
+
+        if (banksData && banksData.length > 0) {
+          setBankAccounts(banksData);
         }
       } catch (err) {
-        console.error("[BookingPage] Error loading live services:", err);
+        console.error("[BookingPage] Error loading initial data:", err);
       } finally {
         setLoadingServices(false);
+        setLoadingBanks(false);
       }
     }
-    loadServices();
+    loadData();
 
     // Default preferred date to tomorrow
     const tomorrow = new Date();
     tomorrow.setDate(tomorrow.getDate() + 1);
     setSelectedDate(tomorrow.toISOString().split("T")[0]);
   }, []);
+
+  const handleCopyToClipboard = (text: string, identifier: string) => {
+    if (!text) return;
+    navigator.clipboard.writeText(text);
+    setCopiedAccount(identifier);
+    setTimeout(() => {
+      setCopiedAccount(null);
+    }, 2500);
+  };
+
+  const handleProceedToStep2 = () => {
+    if (!selectedService) {
+      setApiError("Please select a service before continuing.");
+      return;
+    }
+    if (!selectedDate) {
+      setApiError("Please choose your preferred appointment date.");
+      return;
+    }
+    setApiError("");
+    setStep(2);
+  };
+
+  const handleProceedToStep3 = (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!isAuthenticated && !customer) {
+      openAuthModal(
+        "Please sign in or register to complete your reservation.",
+        (loggedCustomer) => {
+          setClientName(loggedCustomer.name);
+          setClientPhone(loggedCustomer.phone_no1);
+        }
+      );
+      return;
+    }
+
+    if (!clientName.trim() || !clientPhone.trim()) {
+      setApiError("Please enter your full name and contact phone number.");
+      return;
+    }
+
+    setApiError("");
+    setStep(3);
+  };
 
   const handleConfirmBooking = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -126,11 +190,11 @@ export default function BookingPage() {
       if (res.success && res.data?.booking_no) {
         setBookingRef(res.data.booking_no);
         setApiError("");
-        setStep(3);
+        setStep(4);
       } else if (res.success) {
         setBookingRef(res.data?.booking_no || "APT-" + Date.now().toString().slice(-6));
         setApiError("");
-        setStep(3);
+        setStep(4);
       } else {
         setApiError(
           res.error ||
@@ -166,6 +230,36 @@ export default function BookingPage() {
     return "Rs. 2,500";
   };
 
+  // Fallback bank accounts if backend API returns an empty array
+  const displayBankAccounts: BankAccountItem[] =
+    bankAccounts.length > 0
+      ? bankAccounts
+      : [
+          {
+            id: 1,
+            bank_name: "Meezan Bank Limited",
+            account_title: "Jugnu's Saloon (Pvt) Ltd",
+            account_no: "01020304050607",
+            iban: "PK89MEZN0001020304050607",
+            branch: "DHA Phase 5 Branch, Lahore",
+          },
+          {
+            id: 2,
+            bank_name: "Bank Alfalah",
+            account_title: "Jugnu's Saloon Official",
+            account_no: "5501982736451",
+            iban: "PK36ALFH5501982736451",
+            branch: "Gulberg III Main Branch",
+          },
+          {
+            id: 3,
+            bank_name: "JazzCash / EasyPaisa",
+            account_title: "Jugnu's Saloon Services",
+            account_no: "0300 8476592",
+            branch: "Mobile Wallet Direct",
+          },
+        ];
+
   return (
     <main className="min-h-screen bg-[#FAFAFA] text-[#111111] relative">
       <Navbar />
@@ -187,12 +281,78 @@ export default function BookingPage() {
             </h1>
             <div className="w-16 h-1 bg-[#D4AF37] mx-auto rounded-full" />
             <p className="text-slate-600 text-xs font-normal">
-              Jugnu&apos;s Saloon • Select your service and reserve your spot in seconds.
+              Jugnu&apos;s Saloon • Select your service, review bank transfer details, and reserve your spot.
             </p>
           </div>
 
+          {/* Stepper Progress Indicator */}
+          {step <= 3 && (
+            <div className="max-w-xl mx-auto mb-8">
+              <div className="flex items-center justify-between text-xs font-bold uppercase tracking-wider">
+                <div
+                  className={`flex items-center gap-2 ${
+                    step >= 1 ? "text-[#111111]" : "text-slate-400"
+                  }`}
+                >
+                  <span
+                    className={`w-6 h-6 rounded-full flex items-center justify-center text-[11px] ${
+                      step >= 1
+                        ? "bg-[#111111] text-white"
+                        : "bg-slate-200 text-slate-500"
+                    }`}
+                  >
+                    1
+                  </span>
+                  <span>Service</span>
+                </div>
+                <div
+                  className={`h-0.5 flex-1 mx-3 ${
+                    step >= 2 ? "bg-[#111111]" : "bg-slate-200"
+                  }`}
+                />
+                <div
+                  className={`flex items-center gap-2 ${
+                    step >= 2 ? "text-[#111111]" : "text-slate-400"
+                  }`}
+                >
+                  <span
+                    className={`w-6 h-6 rounded-full flex items-center justify-center text-[11px] ${
+                      step >= 2
+                        ? "bg-[#111111] text-white"
+                        : "bg-slate-200 text-slate-500"
+                    }`}
+                  >
+                    2
+                  </span>
+                  <span>Contact</span>
+                </div>
+                <div
+                  className={`h-0.5 flex-1 mx-3 ${
+                    step >= 3 ? "bg-[#111111]" : "bg-slate-200"
+                  }`}
+                />
+                <div
+                  className={`flex items-center gap-2 ${
+                    step >= 3 ? "text-[#111111]" : "text-slate-400"
+                  }`}
+                >
+                  <span
+                    className={`w-6 h-6 rounded-full flex items-center justify-center text-[11px] ${
+                      step >= 3
+                        ? "bg-[#111111] text-white"
+                        : "bg-slate-200 text-slate-500"
+                    }`}
+                  >
+                    3
+                  </span>
+                  <span>Bank &amp; Slip</span>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Member Login Notice if not logged in */}
-          {!isAuthenticated && (
+          {!isAuthenticated && step <= 3 && (
             <div className="mb-8 max-w-xl mx-auto p-4 rounded-2xl bg-[#111111] text-white flex flex-col sm:flex-row items-center justify-between gap-4 shadow-md">
               <div className="space-y-0.5 text-center sm:text-left">
                 <p className="text-xs font-bold text-[#D4AF37] uppercase tracking-wider">
@@ -220,6 +380,7 @@ export default function BookingPage() {
             </div>
           )}
 
+          {/* STEP 1: Service & Schedule */}
           {step === 1 && (
             <div className="space-y-6 max-w-xl mx-auto">
               {/* Service Selection */}
@@ -293,23 +454,17 @@ export default function BookingPage() {
 
               <button
                 type="button"
-                onClick={() => {
-                  if (!selectedService) {
-                    setApiError("Please select a service before continuing.");
-                    return;
-                  }
-                  setApiError("");
-                  setStep(2);
-                }}
+                onClick={handleProceedToStep2}
                 className="w-full py-4 rounded-full bg-[#111111] text-white font-bold text-xs uppercase tracking-widest hover:bg-[#D4AF37] hover:text-black transition-all shadow-md cursor-pointer"
               >
-                Next Step &rarr;
+                Proceed to Client Details &rarr;
               </button>
             </div>
           )}
 
+          {/* STEP 2: Client Contact Details */}
           {step === 2 && (
-            <form onSubmit={handleConfirmBooking} className="space-y-5 max-w-xl mx-auto">
+            <form onSubmit={handleProceedToStep3} className="space-y-5 max-w-xl mx-auto">
               {apiError && (
                 <div className="p-3.5 rounded-xl bg-red-50 border border-red-200 text-red-700 text-xs font-medium text-center">
                   ⚠️ {apiError}
@@ -391,30 +546,189 @@ export default function BookingPage() {
                 />
               </div>
 
-              {/* Advance Payment Receipt Upload */}
-              <div>
-                <label className="block text-xs uppercase font-bold text-slate-700 mb-1">
-                  Advance Payment Receipt (Optional, Max 5MB)
-                </label>
-                <input
-                  type="file"
-                  accept="image/*,.pdf"
-                  onChange={(e) => {
-                    if (e.target.files && e.target.files[0]) {
-                      setReceiptFile(e.target.files[0]);
-                    }
-                  }}
-                  className="w-full p-2.5 rounded-xl bg-[#FAFAFA] border border-slate-300 text-[#111111] text-xs file:mr-3 file:py-1 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-[#111111] file:text-[#D4AF37] hover:file:bg-black cursor-pointer"
-                />
-              </div>
-
               <div className="flex items-center space-x-3 pt-2">
                 <button
                   type="button"
                   onClick={() => setStep(1)}
                   className="w-1/3 py-3.5 rounded-full border border-slate-300 text-slate-700 text-xs font-bold uppercase hover:bg-slate-100 transition-colors"
                 >
-                  Back
+                  &larr; Back
+                </button>
+
+                <button
+                  type="submit"
+                  className="w-2/3 py-3.5 rounded-full bg-[#111111] text-white font-bold text-xs uppercase tracking-widest hover:bg-[#D4AF37] hover:text-black transition-all cursor-pointer shadow-md"
+                >
+                  View Bank Accounts &amp; Pay &rarr;
+                </button>
+              </div>
+            </form>
+          )}
+
+          {/* STEP 3: Bank Accounts & Payment Slip Upload */}
+          {step === 3 && (
+            <form onSubmit={handleConfirmBooking} className="space-y-6 max-w-xl mx-auto">
+              {apiError && (
+                <div className="p-3.5 rounded-xl bg-red-50 border border-red-200 text-red-700 text-xs font-medium text-center">
+                  ⚠️ {apiError}
+                </div>
+              )}
+
+              {/* Booking Summary Strip */}
+              <div className="p-4 rounded-2xl bg-[#F8F8F6] border border-slate-200 text-xs flex justify-between items-center">
+                <div>
+                  <p className="font-bold text-[#111111]">{getSelectedServiceTitle()}</p>
+                  <p className="text-[11px] text-slate-500 font-medium">
+                    {selectedDate} at {selectedTime} • For {clientName} ({clientPhone})
+                  </p>
+                </div>
+                <div className="text-right">
+                  <span className="text-[10px] text-slate-400 uppercase font-bold block">
+                    Estimated Total
+                  </span>
+                  <span className="text-[#996515] font-extrabold text-sm font-mono">
+                    {getSelectedServicePrice()}
+                  </span>
+                </div>
+              </div>
+
+              {/* Bank Accounts Section */}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-xs uppercase font-extrabold tracking-wider text-[#111111]">
+                    Official Salon Bank Accounts
+                  </h3>
+                  <span className="text-[10px] text-[#996515] font-bold uppercase tracking-wider">
+                    Bank Transfer / Raast / EasyPaisa
+                  </span>
+                </div>
+
+                <p className="text-[11px] text-slate-500">
+                  Please transfer the booking fee or advance payment to any of our official accounts below:
+                </p>
+
+                {loadingBanks ? (
+                  <div className="p-6 text-center text-xs text-slate-400 bg-slate-50 rounded-2xl border border-slate-200">
+                    Loading bank accounts...
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {displayBankAccounts.map((acc, index) => {
+                      const bankTitle = acc.bank_name || acc.title || "Official Account";
+                      const accountTitle = acc.account_title || acc.account_name || "Jugnu's Saloon";
+                      const accountNum = acc.account_number || acc.account_no || "";
+                      const iban = acc.iban || acc.iban_no || "";
+                      const branch = acc.branch || acc.branch_code || "";
+                      const copyId = `acc-${acc.id || index}`;
+
+                      return (
+                        <div
+                          key={acc.id || index}
+                          className="p-4 rounded-2xl bg-white border-2 border-slate-200 hover:border-[#D4AF37] transition-all relative shadow-sm group"
+                        >
+                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                            <div className="space-y-1 text-xs">
+                              <div className="flex items-center gap-2">
+                                <span className="font-extrabold text-[#111111] text-sm">
+                                  {bankTitle}
+                                </span>
+                                {branch && (
+                                  <span className="text-[10px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded-md font-medium">
+                                    {branch}
+                                  </span>
+                                )}
+                              </div>
+                              <p className="text-slate-600 text-[11px]">
+                                Account Title: <span className="font-bold text-[#111111]">{accountTitle}</span>
+                              </p>
+                              {accountNum && (
+                                <p className="text-slate-600 text-[11px] font-mono">
+                                  Account No:{" "}
+                                  <span className="font-bold text-[#111111] bg-slate-100 px-1.5 py-0.5 rounded">
+                                    {accountNum}
+                                  </span>
+                                </p>
+                              )}
+                              {iban && (
+                                <p className="text-slate-600 text-[11px] font-mono">
+                                  IBAN:{" "}
+                                  <span className="font-bold text-[#111111] bg-slate-100 px-1.5 py-0.5 rounded">
+                                    {iban}
+                                  </span>
+                                </p>
+                              )}
+                            </div>
+
+                            {/* Copy Button */}
+                            {accountNum && (
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  handleCopyToClipboard(iban || accountNum, copyId)
+                                }
+                                className={`px-4 py-2 rounded-xl text-xs font-bold tracking-wider uppercase transition-all whitespace-nowrap self-start sm:self-center cursor-pointer ${
+                                  copiedAccount === copyId
+                                    ? "bg-emerald-600 text-white"
+                                    : "bg-[#111111] text-[#D4AF37] hover:bg-[#D4AF37] hover:text-black"
+                                }`}
+                              >
+                                {copiedAccount === copyId ? "✓ Copied!" : "Copy Details"}
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+
+              {/* Advance Payment Receipt Upload (Located BELOW the bank accounts) */}
+              <div className="space-y-2 pt-2 border-t border-slate-200">
+                <label className="block text-xs uppercase font-bold text-slate-700">
+                  Upload Payment Receipt / Slip
+                </label>
+                <p className="text-[11px] text-slate-500">
+                  After transferring, upload a screenshot or photo of your payment slip (PNG, JPG, PDF, Max 5MB).
+                </p>
+
+                <div className="mt-2">
+                  <input
+                    type="file"
+                    id="receipt-file-input"
+                    accept="image/*,.pdf"
+                    onChange={(e) => {
+                      if (e.target.files && e.target.files[0]) {
+                        setReceiptFile(e.target.files[0]);
+                      }
+                    }}
+                    className="w-full p-3 rounded-2xl bg-[#FAFAFA] border-2 border-dashed border-slate-300 text-[#111111] text-xs file:mr-3 file:py-1.5 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-[#111111] file:text-[#D4AF37] hover:file:bg-black cursor-pointer hover:border-[#D4AF37] transition-all"
+                  />
+                </div>
+
+                {receiptFile && (
+                  <div className="p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs flex items-center justify-between">
+                    <span className="font-medium truncate">
+                      ✓ Attached: <span className="font-bold">{receiptFile.name}</span> ({(receiptFile.size / 1024).toFixed(0)} KB)
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setReceiptFile(null)}
+                      className="text-emerald-700 font-bold hover:text-red-600 ml-2"
+                    >
+                      Remove
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              <div className="flex items-center space-x-3 pt-4">
+                <button
+                  type="button"
+                  onClick={() => setStep(2)}
+                  className="w-1/3 py-3.5 rounded-full border border-slate-300 text-slate-700 text-xs font-bold uppercase hover:bg-slate-100 transition-colors"
+                >
+                  &larr; Back
                 </button>
 
                 <button
@@ -422,13 +736,14 @@ export default function BookingPage() {
                   disabled={isSubmitting}
                   className="w-2/3 py-3.5 rounded-full bg-[#D4AF37] text-black font-bold text-xs uppercase tracking-widest hover:bg-[#111111] hover:text-white transition-all cursor-pointer shadow-md disabled:opacity-50"
                 >
-                  {isSubmitting ? "Submitting..." : "Confirm & Reserve"}
+                  {isSubmitting ? "Submitting..." : "Confirm & Complete Reservation"}
                 </button>
               </div>
             </form>
           )}
 
-          {step === 3 && (
+          {/* STEP 4: Reservation Confirmed */}
+          {step === 4 && (
             <div className="text-center space-y-6 max-w-md mx-auto py-6">
               <div className="w-16 h-16 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center text-3xl mx-auto border-2 border-emerald-500">
                 ✓
@@ -461,6 +776,12 @@ export default function BookingPage() {
                 <div className="flex justify-between">
                   <span className="text-slate-500">Phone Contact:</span>
                   <span className="font-bold">{clientPhone}</span>
+                </div>
+                <div className="flex justify-between border-t border-slate-200 pt-2">
+                  <span className="text-slate-500">Payment Status:</span>
+                  <span className="font-bold text-amber-700">
+                    {receiptFile ? "Receipt Uploaded (Verifying)" : "Pending Confirmation"}
+                  </span>
                 </div>
               </div>
 
